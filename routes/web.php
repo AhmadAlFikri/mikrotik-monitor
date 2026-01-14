@@ -5,35 +5,52 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RouterController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ReportController;
+
+/*
+|--------------------------------------------------------------------------
+| DEFAULT
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+    return redirect('/login');
+});
 
 /*
 |--------------------------------------------------------------------------
 | AUTH
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => redirect('/login'));
 Route::get('/login', [AuthController::class, 'loginForm']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
 /*
 |--------------------------------------------------------------------------
-| DASHBOARD (ADMIN & ADMINISTRATOR)
+| DASHBOARD & MONITORING
+| Role: admin + administrator
 |--------------------------------------------------------------------------
 */
 Route::middleware('adminOnly')->group(function () {
 
+    // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // REALTIME API (AJAX / FETCH)
     Route::get('/api/router/{id}', [DashboardController::class, 'realtime']);
 
-    // ROUTER
+    // ROUTER MANAGEMENT
     Route::get('/router/add', [RouterController::class, 'add']);
     Route::post('/router/store', [RouterController::class, 'store']);
+
+    // REPORT
+    Route::get('/report/monthly', [ReportController::class, 'monthly']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN MANAGEMENT (ADMINISTRATOR ONLY)
+| ADMIN MANAGEMENT
+| Role: administrator ONLY
 |--------------------------------------------------------------------------
 */
 Route::middleware('administratorOnly')->group(function () {

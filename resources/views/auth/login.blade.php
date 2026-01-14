@@ -1,195 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <title>Login Admin</title>
-    @vite('resources/css/app.css')
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - MikroTik Monitor</title>
 
-    <!-- Animasi fade-out (inline agar FULL dalam satu file) -->
-    <style>
-        .fade-out {
-            animation: fadeOut .6s ease-in-out forwards;
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to   { opacity: 0; }
-        }
-    </style>
+    @vite('resources/css/app.css')
 </head>
 
-<body class="bg-slate-100 min-h-screen flex items-center justify-center">
+<body class="antialiased bg-slate-50 text-slate-700">
 
-<!-- OVERLAY REDIRECT -->
-<div id="redirectOverlay"
-     class="fixed inset-0 bg-slate-900/70 hidden
-            flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 text-center animate-pulse">
-        <p class="text-slate-700 font-semibold mb-1">Login berhasil</p>
-        <p class="text-sm text-slate-500">Mengalihkan ke dashboard...</p>
-    </div>
-</div>
+    @includeIf('components.loading')
 
-<div class="w-full max-w-md">
+    <div class="min-h-screen flex flex-col items-center justify-center sm:p-6">
 
-    <!-- CARD -->
-    <div class="bg-white shadow-lg rounded-lg p-8">
+        <a href="/" class="flex items-center justify-center gap-2 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span class="text-2xl font-bold tracking-wide text-slate-800">
+                MikroTik Monitor
+            </span>
+        </a>
 
-        <h2 class="text-2xl font-bold text-center mb-6 text-slate-700">
-            Login Admin
-        </h2>
+        <div class="w-full sm:max-w-md bg-white shadow-md rounded-lg px-6 py-8">
 
-        <!-- ERROR -->
-        @if(session('error'))
-            <div class="bg-red-100 text-red-600 text-sm p-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
-        @endif
+            <h2 class="text-2xl font-bold text-center mb-1 text-slate-800">
+                Selamat Datang Kembali
+            </h2>
+            <p class="text-center text-sm text-slate-500 mb-6">Silakan masuk untuk melanjutkan.</p>
 
-        <!-- FORM -->
-        <form method="POST" action="/login" class="space-y-4" onsubmit="handleLogin()">
-            @csrf
+            <!-- Session Status -->
+            @if (session('status'))
+                <div class="bg-green-100 text-green-800 text-sm font-semibold p-3 rounded-md mb-4" role="alert">
+                    {{ session('status') }}
+                </div>
+            @endif
 
-            <!-- USERNAME -->
-            <div>
-                <label class="block text-sm font-semibold text-slate-600 mb-1">
-                    Username
-                </label>
-                <input
-                    type="text"
-                    name="username"
-                    placeholder="Masukkan username"
-                    class="w-full border border-slate-300 rounded px-3 py-2
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                >
-            </div>
+            <!-- Validation Errors -->
+            @if ($errors->any())
+                <div class="bg-red-100 text-red-800 text-sm p-3 rounded-md mb-4" role="alert">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-            <!-- PASSWORD + TOGGLE -->
-            <div>
-                <label class="block text-sm font-semibold text-slate-600 mb-1">
-                    Password
-                </label>
+            @if(session('error'))
+                <div class="bg-red-100 text-red-800 text-sm font-semibold p-3 rounded-md mb-4" role="alert">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            <form id="loginForm" method="POST" action="{{ url('/login') }}" class="space-y-5">
+                @csrf
+
+                <div>
+                    <label for="username" class="block text-sm font-medium text-slate-600 mb-1">
+                        Username
+                    </label>
+                    <input id="username" type="text" name="username" value="{{ old('username') }}" required
+                        autofocus autocomplete="username"
+                        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
 
                 <div class="relative">
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        placeholder="Masukkan password"
-                        class="w-full border border-slate-300 rounded px-3 py-2 pr-12
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    >
-
-                    <!-- TOGGLE ICON -->
-                    <button type="button"
-                        onclick="togglePassword()"
-                        class="absolute inset-y-0 right-3 flex items-center
-                               text-slate-500 hover:text-slate-700">
-
-                        <!-- EYE OPEN -->
-                        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg"
-                             class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5
-                                     c4.478 0 8.268 2.943 9.542 7
-                                     -1.274 4.057-5.064 7-9.542 7
-                                     -4.477 0-8.268-2.943-9.542-7z"/>
+                    <label for="password" class="block text-sm font-medium text-slate-600 mb-1">
+                        Password
+                    </label>
+                    <input id="password" type="password" name="password" required
+                        autocomplete="current-password"
+                        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pr-10">
+                    <button type="button" onclick="togglePasswordVisibility()"
+                        class="absolute inset-y-0 right-0 top-7 flex items-center px-3 text-slate-500 hover:text-indigo-600 rounded-full">
+                        <svg id="eyeIcon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-
-                        <!-- EYE OFF -->
-                        <svg id="eyeOff" xmlns="http://www.w3.org/2000/svg"
-                             class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M13.875 18.825A10.05 10.05 0 0112 19
-                                     c-4.478 0-8.268-2.943-9.543-7
-                                     a9.97 9.97 0 012.642-4.362M6.18 6.18
-                                     A9.953 9.953 0 0112 5
-                                     c4.478 0 8.268 2.943 9.543 7
-                                     a9.978 9.978 0 01-4.132 5.411M15 12
-                                     a3 3 0 00-3-3m0 0
-                                     a3 3 0 013 3m-3-3L3 3m18 18l-3-3"/>
+                        <svg id="eyeOffIcon" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 012.642-4.362M6.18 6.18A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a9.978 9.978 0 01-4.132 5.411M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-3-3" />
                         </svg>
                     </button>
                 </div>
-            </div>
 
-            <!-- BUTTON -->
-            <button
-                id="loginBtn"
-                type="submit"
-                class="w-full bg-blue-600 hover:bg-blue-700
-                       text-white py-2 rounded font-semibold transition
-                       flex items-center justify-center gap-2"
-            >
-                <span id="btnText">Login</span>
+                <div class="pt-2">
+                    <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        Login
+                    </button>
+                </div>
+            </form>
+        </div>
 
-                <!-- LOADING SPINNER -->
-                <svg id="loader" class="hidden animate-spin h-5 w-5 text-white"
-                     xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10"
-                            stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-            </button>
-        </form>
-
+        <p class="text-center text-sm text-slate-500 mt-8">
+            &copy; {{ date('Y') }} MikroTik Monitor. All rights reserved.
+        </p>
     </div>
 
-    <!-- FOOTER -->
-    <p class="text-center text-sm text-slate-500 mt-4">
-        © {{ date('Y') }} MikroTik Monitoring
-    </p>
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOffIcon = document.getElementById('eyeOffIcon');
 
-</div>
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            }
+        }
 
-<!-- SCRIPT -->
-<script>
-function togglePassword() {
-    const input = document.getElementById('password');
-    const eyeOpen = document.getElementById('eyeOpen');
-    const eyeOff  = document.getElementById('eyeOff');
-
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeOpen.classList.add('hidden');
-        eyeOff.classList.remove('hidden');
-    } else {
-        input.type = 'password';
-        eyeOpen.classList.remove('hidden');
-        eyeOff.classList.add('hidden');
-    }
-}
-
-function handleLogin() {
-    const btn     = document.getElementById('loginBtn');
-    const text    = document.getElementById('btnText');
-    const loader  = document.getElementById('loader');
-    const overlay = document.getElementById('redirectOverlay');
-
-    // tombol loading
-    btn.disabled = true;
-    btn.classList.add('opacity-70', 'cursor-not-allowed');
-    text.textContent = 'Logging in...';
-    loader.classList.remove('hidden');
-
-    // animasi fade halaman
-    setTimeout(() => {
-        document.body.classList.add('fade-out');
-    }, 400);
-
-    // tampilkan overlay redirect
-    setTimeout(() => {
-        overlay.classList.remove('hidden');
-    }, 700);
-}
-</script>
-
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            // Optional: You can uncomment this if you have a loading component
+            // const overlay = document.getElementById('loading-overlay');
+            // if(overlay) {
+            //     overlay.classList.remove('opacity-0', 'pointer-events-none');
+            //     overlay.classList.add('opacity-100');
+            // }
+        });
+    </script>
 </body>
 </html>

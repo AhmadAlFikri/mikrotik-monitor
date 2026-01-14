@@ -4,201 +4,378 @@
 
 @section('content')
 
-<h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+<!-- ================= FILTERS ================= -->
+<div class="mb-6 grid md:grid-cols-2 gap-6">
+    <div class="bg-white p-4 rounded-lg shadow-sm">
+        <label for="routerSelect" class="block text-sm font-medium text-slate-600 mb-1">
+            Pilih MikroTik
+        </label>
+        <select id="routerSelect" onchange="changeRouter()"
+                class="block w-full rounded-md border-slate-300 shadow-sm
+                       focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            @foreach($routers as $router)
+                <option value="{{ $router->id }}">
+                    {{ $router->name }} ({{ $router->ip }})
+                </option>
+            @endforeach
+        </select>
+    </div>
 
-<!-- ================= SELECT ROUTER ================= -->
-<div class="bg-white rounded shadow p-5 mb-4">
-    <label class="block text-sm font-semibold mb-2">Pilih MikroTik</label>
-    <select id="routerSelect"
-            onchange="loadData()"
-            class="w-full border rounded px-3 py-2">
-        @foreach($routers as $router)
-            <option value="{{ $router->id }}">
-                {{ $router->name }} ({{ $router->ip }})
-            </option>
-        @endforeach
-    </select>
+    <div class="bg-white p-4 rounded-lg shadow-sm">
+        <label for="searchInput" class="block text-sm font-medium text-slate-600 mb-1">
+            Cari User
+        </label>
+        <input type="text" id="searchInput" onkeyup="searchTable()"
+               class="block w-full rounded-md border-slate-300 shadow-sm
+                      focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+               placeholder="Cari berdasarkan username, ip, atau mac...">
+    </div>
 </div>
 
-<!-- ================= COLUMN BUTTON ================= -->
-<div class="flex justify-end mb-3">
-    <button onclick="openColumnModal()"
-            class="px-3 py-2 bg-slate-800 text-white rounded">
-        Columns
-    </button>
+<!-- ================= ALERT ================= -->
+<div id="alertBox"
+     class="hidden mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm"
+     role="alert">
+</div>
+
+<!-- ================= GRAPH ================= -->
+<div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+    <h3 id="chartTitle" class="font-semibold text-slate-700 mb-2">
+        Realtime Traffic (Top User)
+    </h3>
+    <div class="h-64">
+        <canvas id="trafficChart"></canvas>
+    </div>
 </div>
 
 <!-- ================= TABLE ================= -->
-<div class="bg-white rounded shadow overflow-x-auto">
-<table class="min-w-full text-sm">
-<thead class="bg-slate-800 text-white">
-<tr>
-    <th data-col="user">User</th>
-    <th data-col="address">Address</th>
-    <th data-col="mac">MAC</th>
-    <th data-col="server">Server</th>
-    <th data-col="domain">Domain</th>
-    <th data-col="uptime">Uptime</th>
-    <th data-col="idle_time">Idle Time</th>
-    <th data-col="session_time_left">Session Left</th>
-    <th data-col="rx_rate">Rx Rate</th>
-    <th data-col="tx_rate">Tx Rate</th>
-    <th data-col="login_by">Login By</th>
-</tr>
-</thead>
+<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
+        <h3 class="font-semibold text-slate-700">User Aktif</h3>
+        <button onclick="openColumnModal()"
+            class="px-3 py-2 bg-slate-200 text-slate-700 rounded-md text-sm font-semibold hover:bg-slate-300 transition-colors">
+            Kolom
+        </button>
+    </div>
 
-<tbody id="data">
-<tr>
-<td colspan="11" class="text-center p-4 text-slate-500">
-    Memuat data...
-</td>
-</tr>
-</tbody>
-</table>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600 font-semibold">
+                <tr id="table-headers" class="text-left">
+                    <th id="col-user" class="px-6 py-3">User</th>
+                    <th id="col-status" class="px-6 py-3">Status</th>
+                    <th id="col-address" class="px-6 py-3">IP Address</th>
+                    <th id="col-mac" class="px-6 py-3">MAC Address</th>
+                    <th id="col-uptime" class="px-6 py-3">Uptime</th>
+                    <th id="col-idle_time" class="px-6 py-3">Idle Time</th>
+                    <th id="col-rx_rate" class="px-6 py-3">Rx Rate</th>
+                    <th id="col-tx_rate" class="px-6 py-3">Tx Rate</th>
+                    <th id="col-bytes_in" class="px-6 py-3">Bytes In</th>
+                    <th id="col-bytes_out" class="px-6 py-3">Bytes Out</th>
+                    <th id="col-login_by" class="px-6 py-3">Login By</th>
+                </tr>
+            </thead>
+            <tbody id="data" class="divide-y divide-slate-200">
+                <tr>
+                    <td colspan="11" class="text-center p-8 text-slate-500">
+                        Memuat data...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- ================= COLUMN MODAL ================= -->
-<div id="columnModal"
-     class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
-
-<div class="bg-white rounded w-full max-w-lg p-6">
-<h3 class="font-bold mb-4">Columns</h3>
-
-<div class="grid grid-cols-2 gap-2 text-sm">
-@foreach([
-'user'=>'User',
-'address'=>'Address',
-'mac'=>'MAC Address',
-'server'=>'Server',
-'domain'=>'Domain',
-'uptime'=>'Uptime',
-'idle_time'=>'Idle Time',
-'session_time_left'=>'Session Time Left',
-'rx_rate'=>'Rx Rate',
-'tx_rate'=>'Tx Rate',
-'login_by'=>'Login By'
-] as $key=>$label)
-<label class="flex items-center gap-2">
-    <input type="checkbox"
-           class="column-toggle"
-           data-column="{{ $key }}"
-           checked>
-    {{ $label }}
-</label>
-@endforeach
+<div id="columnModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[999]">
+    <div class="bg-white rounded-lg w-full max-w-md p-6 shadow-xl m-4">
+        <h3 class="text-lg font-semibold mb-4">Tampilkan Kolom</h3>
+        <div id="column-checkboxes" class="grid grid-cols-2 gap-4 text-sm">
+            <!-- Checkboxes will be inserted here by JS -->
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeColumnModal()"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold text-sm hover:bg-indigo-700 transition">
+                Tutup
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="flex justify-end mt-4">
-<button onclick="closeColumnModal()"
-        class="px-4 py-2 bg-slate-200 rounded">
-    Close
-</button>
-</div>
-
-</div>
-</div>
 
 <!-- ================= SCRIPT ================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ===== FORMAT RATE (SEPERTI WINBOX) =====
-function formatRate(bps) {
-    if (bps >= 1024 * 1024) return (bps / 1024 / 1024).toFixed(2) + ' MB/s';
-    if (bps >= 1024) return (bps / 1024).toFixed(2) + ' KB/s';
-    return bps + ' B/s';
+/* ================= GLOBAL ================= */
+const POLL_INTERVAL = 1000; // 🔥 2 DETIK
+let isLoading = false;
+
+let selectedUser = null;
+let chart, labels=[], rxData=[], txData=[];
+let alertShown = {};
+
+const columnState = {
+    user:      { label: 'User',       visible: true, index: 0 },
+    status:    { label: 'Status',     visible: true, index: 1 },
+    address:   { label: 'IP Address', visible: true, index: 2 },
+    mac:       { label: 'MAC Address',visible: true, index: 3 },
+    uptime:    { label: 'Uptime',     visible: true, index: 4 },
+    idle_time: { label: 'Idle Time',  visible: true, index: 5 },
+    rx_rate:   { label: 'Rx Rate',    visible: true, index: 6 },
+    tx_rate:   { label: 'Tx Rate',    visible: true, index: 7 },
+    bytes_in:  { label: 'Bytes In',   visible: true, index: 8 },
+    bytes_out: { label: 'Bytes Out',  visible: true, index: 9 },
+    login_by:  { label: 'Login By',   visible: true, index: 10 },
+};
+
+/* ================= UTIL ================= */
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-// ===== LOAD DATA =====
-function loadData(){
-    const id = document.getElementById('routerSelect').value;
+function formatRate(bps){
+    if (bps > 1024 * 1024 * 1024) return (bps / (1024 * 1024 * 1024)).toFixed(2) + ' Gbps';
+    if (bps > 1024 * 1024) return (bps / (1024 * 1024)).toFixed(2) + ' Mbps';
+    if (bps > 1024) return (bps / 1024).toFixed(2) + ' Kbps';
+    return bps + ' bps';
+}
 
-    fetch('/api/router/' + id)
-        .then(res => res.json())
-        .then(data => {
+function idleSeconds(idle){
+    if(!idle||idle==='-') return 9999;
+    let s=0;
+    idle.replace(/(\d+)([smhwd])/g,(m,v,u)=>{
+        if(u==='s')s+=+v;
+        if(u==='m')s+=v*60;
+        if(u==='h')s+=v*3600;
+        if(u==='d')s+=v*86400;
+        if(u==='w')s+=v*604800;
+    });
+    return s;
+}
 
-            let html = '';
+function getStatus(u){
+    if(u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) return ['Heavy', 'bg-red-100 text-red-800'];
+    if(idleSeconds(u.idle_time) < 5) return ['Active', 'bg-green-100 text-green-800'];
+    if(idleSeconds(u.idle_time) < 60) return ['Idle', 'bg-yellow-100 text-yellow-800'];
+    return ['Normal', 'bg-slate-100 text-slate-800'];
+}
 
-            if (data.length === 0) {
-                html = `
-                <tr>
-                    <td colspan="11"
-                        class="text-center p-4 text-slate-500">
-                        Tidak ada user aktif
-                    </td>
-                </tr>`;
-            } else {
-                data.forEach(u => {
-                    html += `
-                    <tr class="hover:bg-slate-50">
-                        <td data-col="user">${u.user ?? '-'}</td>
-                        <td data-col="address">${u.address ?? '-'}</td>
-                        <td data-col="mac">${u.mac ?? '-'}</td>
-                        <td data-col="server">${u.server ?? '-'}</td>
-                        <td data-col="domain">${u.domain ?? '-'}</td>
-                        <td data-col="uptime">${u.uptime ?? '-'}</td>
-                        <td data-col="idle_time">${u.idle_time ?? '-'}</td>
-                        <td data-col="session_time_left">${u.session_time_left ?? '-'}</td>
-                        <td data-col="rx_rate" class="text-green-600">
-                            ${formatRate(u.rx_rate ?? 0)}
-                        </td>
-                        <td data-col="tx_rate" class="text-blue-600">
-                            ${formatRate(u.tx_rate ?? 0)}
-                        </td>
-                        <td data-col="login_by">${u.login_by ?? '-'}</td>
-                    </tr>`;
-                });
+/* ================= COLUMN VISIBILITY ================= */
+function openColumnModal() {
+    document.getElementById('columnModal').classList.remove('hidden');
+}
+
+function closeColumnModal() {
+    document.getElementById('columnModal').classList.add('hidden');
+}
+
+function toggleColumn(key) {
+    columnState[key].visible = !columnState[key].visible;
+    localStorage.setItem('mikrotikColumnState', JSON.stringify(columnState));
+    applyColumnVisibility();
+}
+
+function applyColumnVisibility() {
+    const table = document.querySelector('.min-w-full');
+    if (!table) return;
+
+    for (const key in columnState) {
+        const header = document.getElementById(`col-${key}`);
+        if (header) {
+            header.style.display = columnState[key].visible ? '' : 'none';
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (row.cells.length > columnState[key].index) {
+                const cell = row.cells[columnState[key].index];
+                if (cell) {
+                    cell.style.display = columnState[key].visible ? '' : 'none';
+                }
             }
-
-            document.getElementById('data').innerHTML = html;
-            applyColumnState();
-        })
-        .catch(() => {
-            document.getElementById('data').innerHTML = `
-            <tr>
-                <td colspan="11"
-                    class="text-center p-4 text-red-500">
-                    Gagal mengambil data MikroTik
-                </td>
-            </tr>`;
         });
+    }
 }
 
-// ===== COLUMN TOGGLE =====
-function toggleColumn(col, show){
-    document.querySelectorAll('[data-col="'+col+'"]')
-        .forEach(el => el.style.display = show ? '' : 'none');
+function initializeColumns() {
+    const savedState = JSON.parse(localStorage.getItem('mikrotikColumnState'));
+    if (savedState) {
+        // Merge saved state with default state to handle new columns
+        for (const key in columnState) {
+            if (savedState[key] !== undefined) {
+                columnState[key].visible = savedState[key].visible;
+            }
+        }
+    }
+
+    const container = document.getElementById('column-checkboxes');
+    let checkboxesHtml = '';
+    for (const key in columnState) {
+        checkboxesHtml += `
+            <label for="check-${key}" class="flex items-center space-x-3 cursor-pointer">
+                <input type="checkbox" id="check-${key}" onchange="toggleColumn('${key}')" 
+                       class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50"
+                       ${columnState[key].visible ? 'checked' : ''}>
+                <span>${columnState[key].label}</span>
+            </label>
+        `;
+    }
+    container.innerHTML = checkboxesHtml;
+    applyColumnVisibility();
 }
 
-function applyColumnState(){
-    document.querySelectorAll('.column-toggle').forEach(cb => {
-        const state = localStorage.getItem('col_' + cb.dataset.column);
-        if (state === 'hidden') {
-            cb.checked = false;
-            toggleColumn(cb.dataset.column, false);
+/* ================= CHART ================= */
+function initChart(){
+    chart=new Chart(document.getElementById('trafficChart'),{
+        type:'line',
+        data:{
+            labels,
+            datasets:[
+                {label:'Rx',data:rxData,borderColor:'#16a34a',backgroundColor:'#16a34a20',fill:true,tension:.3},
+                {label:'Tx',data:txData,borderColor:'#2563eb',backgroundColor:'#2563eb20',fill:true,tension:.3}
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio: false,
+            animation:false,
+            interaction:{intersect:false, mode: 'index'},
+            scales: {
+                y: {
+                    ticks: {
+                        callback: value => formatRate(value)
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: context => `${context.dataset.label}: ${formatRate(context.raw)}`
+                    }
+                }
+            }
         }
     });
 }
 
-document.querySelectorAll('.column-toggle').forEach(cb => {
-    cb.onchange = function(){
-        toggleColumn(this.dataset.column, this.checked);
-        localStorage.setItem(
-            'col_' + this.dataset.column,
-            this.checked ? 'show' : 'hidden'
-        );
-    };
+function pushChart(rx,tx){
+    if(rxData.length){
+        rx=(rxData.at(-1)+rx)/2;
+        tx=(txData.at(-1)+tx)/2;
+    }
+
+    labels.push(new Date().toLocaleTimeString());
+    rxData.push(rx);
+    txData.push(tx);
+
+    if(labels.length>30){
+        labels.shift(); rxData.shift(); txData.shift();
+    }
+
+    chart.update('none');
+}
+
+function resetChart(){
+    labels.length=rxData.length=txData.length=0;
+    chart.update();
+}
+
+/* ================= ROUTER ================= */
+function changeRouter(){
+    selectedUser=null;
+    alertShown={};
+    resetChart();
+    document.getElementById('chartTitle').innerText='Realtime Traffic (Top User)';
+    loadData();
+}
+
+/* ================= USER ================= */
+function selectUser(u){
+    selectedUser=u;
+    resetChart();
+    document.getElementById('chartTitle').innerText='Realtime Traffic ('+u+')';
+    loadData();
+}
+
+/* ================= LOAD DATA ================= */
+function loadData(){
+    if(isLoading) return;
+    isLoading=true;
+
+    const id=document.getElementById('routerSelect').value;
+
+    fetch('/api/router/'+id)
+    .then(r=>r.json())
+    .then(data=>{
+        let html='';
+        let target=null;
+
+        if(selectedUser){
+            target=data.find(x=>x.user===selectedUser);
+        }
+        if(!target && data.length){
+            target=[...data].sort((a,b)=>(b.rx_rate+b.tx_rate)-(a.rx_rate+a.tx_rate))[0];
+        }
+
+        if(target) pushChart(target.rx_rate||0,target.tx_rate||0);
+
+        data.forEach(u=>{
+            const [st,color]=getStatus(u);
+
+            if((u.rx_rate > 10_000_000 || u.tx_rate > 10_000_000) && !alertShown[u.user]){
+                alertShown[u.user]=true;
+                const alertBox = document.getElementById('alertBox');
+                alertBox.classList.remove('hidden');
+                alertBox.innerHTML = `<strong>Peringatan Bandwidth Tinggi!</strong> Pengguna <strong>${u.user}</strong> menggunakan traffic lebih dari 10 Mbps.`;
+            }
+
+            html+=`
+            <tr class="hover:bg-slate-50/70 transition-colors duration-150 cursor-pointer"
+                onclick="selectUser('${u.user}')">
+                <td data-col="user" class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${u.user}</td>
+                <td data-col="status" class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 text-xs font-semibold rounded-full ${color}">${st}</span></td>
+                <td data-col="address" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.address}</td>
+                <td data-col="mac" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.mac}</td>
+                <td data-col="uptime" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.uptime}</td>
+                <td data-col="idle_time" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.idle_time}</td>
+                <td data-col="rx_rate" class="px-6 py-4 whitespace-nowrap text-green-700 font-medium">${formatRate(u.rx_rate)}</td>
+                <td data-col="tx_rate" class="px-6 py-4 whitespace-nowrap text-blue-700 font-medium">${formatRate(u.tx_rate)}</td>
+                <td data-col="bytes_in" class="px-6 py-4 whitespace-nowrap text-slate-500">${formatBytes(u.bytes_in)}</td>
+                <td data-col="bytes_out" class="px-6 py-4 whitespace-nowrap text-slate-500">${formatBytes(u.bytes_out)}</td>
+                <td data-col="login_by" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.login_by}</td>
+            </tr>`;
+        });
+
+        if(!data.length) {
+            html=`<tr><td colspan="11" class="text-center p-8 text-slate-500">Tidak ada user aktif pada router ini.</td></tr>`;
+        }
+        document.getElementById('data').innerHTML=html;
+        applyColumnVisibility(); // Apply visibility after rendering new rows
+    })
+    .finally(()=>isLoading=false);
+}
+
+/* ================= SEARCH ================= */
+function searchTable(){
+    const q=searchInput.value.toLowerCase();
+    document.querySelectorAll('#data tr').forEach(tr=>{
+        const text = tr.innerText.toLowerCase();
+        tr.style.display = text.includes(q) ? '' : 'none';
+    });
+}
+
+/* ================= INIT ================= */
+document.addEventListener('DOMContentLoaded',()=>{
+    initializeColumns();
+    initChart();
+    loadData();
+    setInterval(loadData,POLL_INTERVAL);
 });
-
-// ===== MODAL =====
-function openColumnModal(){
-    document.getElementById('columnModal').classList.remove('hidden');
-}
-function closeColumnModal(){
-    document.getElementById('columnModal').classList.add('hidden');
-}
-
-// ===== REALTIME =====
-setInterval(loadData, 3000);
-loadData();
 </script>
 
 @endsection
