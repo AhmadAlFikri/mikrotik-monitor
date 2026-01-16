@@ -52,10 +52,54 @@
 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
     <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
         <h3 class="font-semibold text-slate-700">User Aktif</h3>
-        <button onclick="openColumnModal()"
-            class="px-3 py-2 bg-slate-200 text-slate-700 rounded-md text-sm font-semibold hover:bg-slate-300 transition-colors">
-            Kolom
-        </button>
+        <div class="flex items-center gap-2">
+            <!-- Tombol Urutkan Dropdown -->
+            <div class="relative" id="sort-dropdown-container">
+                <button onclick="toggleSortDropdown()"
+                        class="px-3 py-2 bg-slate-200 text-slate-700 rounded-md text-sm font-semibold hover:bg-slate-300 transition-colors">
+                    Urutkan
+                </button>
+                <div id="sort-dropdown"
+                     class="hidden absolute right-0 mt-2 w-60 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div class="py-2 px-4" role="menu" aria-orientation="vertical">
+                        <!-- Konten dropdown di-generate oleh JS -->
+                        <div class="mb-3">
+                            <label for="sort-column-select" class="block text-sm font-medium text-slate-600 mb-1">
+                                Urutkan berdasarkan
+                            </label>
+                            <select id="sort-column-select"
+                                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                                <!-- Opsi kolom di-generate oleh JS -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                             <label class="block text-sm font-medium text-slate-600 mb-2">
+                                Arah
+                            </label>
+                            <div class="flex items-center gap-4">
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <input type="radio" name="sort_direction_radio" value="asc" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span>A-Z</span>
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <input type="radio" name="sort_direction_radio" value="desc" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span>Z-A</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button onclick="applySort()"
+                                class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold text-sm hover:bg-indigo-700 transition">
+                            Terapkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Tombol Kolom -->
+            <button onclick="openColumnModal()"
+                    class="px-3 py-2 bg-slate-200 text-slate-700 rounded-md text-sm font-semibold hover:bg-slate-300 transition-colors">
+                Kolom
+            </button>
+        </div>
     </div>
 
     <div class="overflow-x-auto">
@@ -102,30 +146,30 @@
     </div>
 </div>
 
-
 <!-- ================= SCRIPT ================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 /* ================= GLOBAL ================= */
-const POLL_INTERVAL = 1000; // 🔥 2 DETIK
+const POLL_INTERVAL = 1000;
 let isLoading = false;
-
 let selectedUser = null;
-let chart, labels=[], rxData=[], txData=[];
+let chart, labels = [], rxData = [], txData = [];
 let alertShown = {};
+let sortColumn = 'uptime';
+let sortDirection = 'desc';
 
 const columnState = {
     user:      { label: 'User',       visible: true, index: 0 },
-    status:    { label: 'Status',     visible: true, index: 1 },
+    status:    { label: 'Status',     visible: false, index: 1 },
     address:   { label: 'IP Address', visible: true, index: 2 },
-    mac:       { label: 'MAC Address',visible: true, index: 3 },
+    mac:       { label: 'MAC Address',visible: false, index: 3 },
     uptime:    { label: 'Uptime',     visible: true, index: 4 },
-    idle_time: { label: 'Idle Time',  visible: true, index: 5 },
+    idle_time: { label: 'Idle Time',  visible: false, index: 5 },
     rx_rate:   { label: 'Rx Rate',    visible: true, index: 6 },
     tx_rate:   { label: 'Tx Rate',    visible: true, index: 7 },
     bytes_in:  { label: 'Bytes In',   visible: true, index: 8 },
     bytes_out: { label: 'Bytes Out',  visible: true, index: 9 },
-    login_by:  { label: 'Login By',   visible: true, index: 10 },
+    login_by:  { label: 'Login By',   visible: false, index: 10 },
 };
 
 /* ================= UTIL ================= */
@@ -139,31 +183,58 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 function formatRate(bps){
-    if (bps > 1024 * 1024 * 1024) return (bps / (1024 * 1024 * 1024)).toFixed(2) + ' Gbps';
-    if (bps > 1024 * 1024) return (bps / (1024 * 1024)).toFixed(2) + ' Mbps';
-    if (bps > 1024) return (bps / 1024).toFixed(2) + ' Kbps';
+    if (bps >= 1024 * 1024 * 1024) return (bps / (1024 * 1024 * 1024)).toFixed(2) + ' Gbps';
+    if (bps >= 1024 * 1024) return (bps / (1024 * 1024)).toFixed(2) + ' Mbps';
+    if (bps >= 1024) return (bps / 1024).toFixed(2) + ' Kbps';
     return bps + ' bps';
 }
 
-function idleSeconds(idle){
-    if(!idle||idle==='-') return 9999;
-    let s=0;
-    idle.replace(/(\d+)([smhwd])/g,(m,v,u)=>{
-        if(u==='s')s+=+v;
-        if(u==='m')s+=v*60;
-        if(u==='h')s+=v*3600;
-        if(u==='d')s+=v*86400;
-        if(u==='w')s+=v*604800;
-    });
-    return s;
+function getStatus(u) {
+    if(u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) return ['Heavy', 'bg-red-100 text-red-800'];
+    const idle = u.idle_time.includes('s'); // crude but effective
+    if(!idle) return ['Idle', 'bg-yellow-100 text-yellow-800'];
+    return ['Active', 'bg-green-100 text-green-800'];
 }
 
-function getStatus(u){
-    if(u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) return ['Heavy', 'bg-red-100 text-red-800'];
-    if(idleSeconds(u.idle_time) < 5) return ['Active', 'bg-green-100 text-green-800'];
-    if(idleSeconds(u.idle_time) < 60) return ['Idle', 'bg-yellow-100 text-yellow-800'];
-    return ['Normal', 'bg-slate-100 text-slate-800'];
+/* ================= SORTING DROPDOWN ================= */
+function toggleSortDropdown() {
+    const dropdown = document.getElementById('sort-dropdown');
+    dropdown.classList.toggle('hidden');
+    if (!dropdown.classList.contains('hidden')) {
+        initializeSortDropdown();
+    }
 }
+
+function initializeSortDropdown() {
+    const select = document.getElementById('sort-column-select');
+    select.innerHTML = '';
+    for (const key in columnState) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = columnState[key].label;
+        if (key === sortColumn) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    }
+    document.querySelector(`input[name="sort_direction_radio"][value="${sortDirection}"]`).checked = true;
+}
+
+function applySort() {
+    sortColumn = document.getElementById('sort-column-select').value;
+    sortDirection = document.querySelector('input[name="sort_direction_radio"]:checked').value;
+    loadData();
+    toggleSortDropdown(); // Close dropdown after applying
+}
+
+// Close dropdown if clicked outside
+window.addEventListener('click', function(e) {
+    const container = document.getElementById('sort-dropdown-container');
+    if (container && !container.contains(e.target)) {
+        document.getElementById('sort-dropdown').classList.add('hidden');
+    }
+});
+
 
 /* ================= COLUMN VISIBILITY ================= */
 function openColumnModal() {
@@ -181,23 +252,11 @@ function toggleColumn(key) {
 }
 
 function applyColumnVisibility() {
-    const table = document.querySelector('.min-w-full');
-    if (!table) return;
-
     for (const key in columnState) {
-        const header = document.getElementById(`col-${key}`);
-        if (header) {
-            header.style.display = columnState[key].visible ? '' : 'none';
-        }
-        
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            if (row.cells.length > columnState[key].index) {
-                const cell = row.cells[columnState[key].index];
-                if (cell) {
-                    cell.style.display = columnState[key].visible ? '' : 'none';
-                }
-            }
+        const visible = columnState[key].visible;
+        document.getElementById(`col-${key}`).style.display = visible ? '' : 'none';
+        document.querySelectorAll(`#data td[data-col="${key}"]`).forEach(cell => {
+            cell.style.display = visible ? '' : 'none';
         });
     }
 }
@@ -205,7 +264,6 @@ function applyColumnVisibility() {
 function initializeColumns() {
     const savedState = JSON.parse(localStorage.getItem('mikrotikColumnState'));
     if (savedState) {
-        // Merge saved state with default state to handle new columns
         for (const key in columnState) {
             if (savedState[key] !== undefined) {
                 columnState[key].visible = savedState[key].visible;
@@ -214,69 +272,44 @@ function initializeColumns() {
     }
 
     const container = document.getElementById('column-checkboxes');
-    let checkboxesHtml = '';
-    for (const key in columnState) {
-        checkboxesHtml += `
-            <label for="check-${key}" class="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" id="check-${key}" onchange="toggleColumn('${key}')" 
-                       class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50"
-                       ${columnState[key].visible ? 'checked' : ''}>
-                <span>${columnState[key].label}</span>
-            </label>
-        `;
-    }
-    container.innerHTML = checkboxesHtml;
+    container.innerHTML = Object.keys(columnState).map(key => `
+        <label for="check-${key}" class="flex items-center space-x-3 cursor-pointer">
+            <input type="checkbox" id="check-${key}" onchange="toggleColumn('${key}')"
+                   class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50"
+                   ${columnState[key].visible ? 'checked' : ''}>
+            <span>${columnState[key].label}</span>
+        </label>
+    `).join('');
+
     applyColumnVisibility();
 }
+
 
 /* ================= CHART ================= */
 function initChart(){
     chart=new Chart(document.getElementById('trafficChart'),{
         type:'line',
-        data:{
-            labels,
-            datasets:[
-                {label:'Rx',data:rxData,borderColor:'#16a34a',backgroundColor:'#16a34a20',fill:true,tension:.3},
-                {label:'Tx',data:txData,borderColor:'#2563eb',backgroundColor:'#2563eb20',fill:true,tension:.3}
-            ]
-        },
+        data:{ labels, datasets:[
+            {label:'Rx',data:rxData,borderColor:'#16a34a',backgroundColor:'#16a34a20',fill:true,tension:.3},
+            {label:'Tx',data:txData,borderColor:'#2563eb',backgroundColor:'#2563eb20',fill:true,tension:.3}
+        ]},
         options:{
-            responsive:true,
-            maintainAspectRatio: false,
-            animation:false,
-            interaction:{intersect:false, mode: 'index'},
-            scales: {
-                y: {
-                    ticks: {
-                        callback: value => formatRate(value)
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: context => `${context.dataset.label}: ${formatRate(context.raw)}`
-                    }
-                }
-            }
+            responsive:true, maintainAspectRatio: false, animation:false, interaction:{intersect:false, mode: 'index'},
+            scales: { y: { ticks: { callback: value => formatRate(value) } } },
+            plugins: { tooltip: { callbacks: { label: context => `${context.dataset.label}: ${formatRate(context.raw)}` } } }
         }
     });
 }
 
 function pushChart(rx,tx){
-    if(rxData.length){
-        rx=(rxData.at(-1)+rx)/2;
-        tx=(txData.at(-1)+tx)/2;
+    if(rxData.length) {
+        rx = (rxData.at(-1) + rx) / 2;
+        tx = (txData.at(-1) + tx) / 2;
     }
-
     labels.push(new Date().toLocaleTimeString());
     rxData.push(rx);
     txData.push(tx);
-
-    if(labels.length>30){
-        labels.shift(); rxData.shift(); txData.shift();
-    }
-
+    if(labels.length>30){ labels.shift(); rxData.shift(); txData.shift(); }
     chart.update('none');
 }
 
@@ -298,7 +331,7 @@ function changeRouter(){
 function selectUser(u){
     selectedUser=u;
     resetChart();
-    document.getElementById('chartTitle').innerText='Realtime Traffic ('+u+')';
+    document.getElementById('chartTitle').innerText=`Realtime Traffic (${u})`;
     loadData();
 }
 
@@ -306,32 +339,26 @@ function selectUser(u){
 function loadData(){
     if(isLoading) return;
     isLoading=true;
+    const id = document.getElementById('routerSelect').value;
+    const url = `/api/router/${id}?sort_column=${sortColumn}&sort_direction=${sortDirection}`;
 
-    const id=document.getElementById('routerSelect').value;
-
-    fetch('/api/router/'+id)
-    .then(r=>r.json())
-    .then(data=>{
-        let html='';
-        let target=null;
-
-        if(selectedUser){
-            target=data.find(x=>x.user===selectedUser);
+    fetch(url)
+    .then(r => r.json())
+    .then(data => {
+        let html = '';
+        let target = selectedUser ? data.find(x => x.user === selectedUser) : null;
+        if (!target && data.length) {
+            target = data[0];
         }
-        if(!target && data.length){
-            target=[...data].sort((a,b)=>(b.rx_rate+b.tx_rate)-(a.rx_rate+a.tx_rate))[0];
-        }
+        if (target) pushChart(target.rx_rate || 0, target.tx_rate || 0);
 
-        if(target) pushChart(target.rx_rate||0,target.tx_rate||0);
-
-        data.forEach(u=>{
-            const [st,color]=getStatus(u);
-
-            if((u.rx_rate > 10_000_000 || u.tx_rate > 10_000_000) && !alertShown[u.user]){
-                alertShown[u.user]=true;
+        data.forEach(u => {
+            const [st, color] = getStatus(u);
+            if ((u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) && !alertShown[u.user]) {
+                alertShown[u.user] = true;
                 const alertBox = document.getElementById('alertBox');
                 alertBox.classList.remove('hidden');
-                alertBox.innerHTML = `<strong>Peringatan Bandwidth Tinggi!</strong> Pengguna <strong>${u.user}</strong> menggunakan traffic lebih dari 10 Mbps.`;
+                alertBox.innerHTML = `<strong>Peringatan Bandwidth Tinggi!</strong> Pengguna <strong>${u.user}</strong> menggunakan traffic lebih dari 5 Mbps.`;
             }
 
             html+=`
@@ -354,27 +381,28 @@ function loadData(){
         if(!data.length) {
             html=`<tr><td colspan="11" class="text-center p-8 text-slate-500">Tidak ada user aktif pada router ini.</td></tr>`;
         }
-        document.getElementById('data').innerHTML=html;
-        applyColumnVisibility(); // Apply visibility after rendering new rows
+        document.getElementById('data').innerHTML = html;
+        applyColumnVisibility();
     })
-    .finally(()=>isLoading=false);
+    .finally(() => isLoading = false);
 }
 
 /* ================= SEARCH ================= */
-function searchTable(){
-    const q=searchInput.value.toLowerCase();
-    document.querySelectorAll('#data tr').forEach(tr=>{
+function searchTable() {
+    const q = searchInput.value.toLowerCase();
+    document.querySelectorAll('#data tr').forEach(tr => {
         const text = tr.innerText.toLowerCase();
         tr.style.display = text.includes(q) ? '' : 'none';
     });
 }
 
 /* ================= INIT ================= */
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', () => {
     initializeColumns();
+    initializeSortDropdown();
     initChart();
     loadData();
-    setInterval(loadData,POLL_INTERVAL);
+    setInterval(loadData, POLL_INTERVAL);
 });
 </script>
 

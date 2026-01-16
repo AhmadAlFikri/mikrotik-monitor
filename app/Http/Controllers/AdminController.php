@@ -8,10 +8,20 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $admins = Admin::all();
-        return view('admin.index', compact('admins'));
+        $search = $request->get('search', ''); // Initialize $search with an empty string if not present
+
+        $query = Admin::query();
+
+        if ($search) {
+            $query->where('username', 'like', '%' . $search . '%')
+                  ->orWhere('role', 'like', '%' . $search . '%');
+        }
+
+        $admins = $query->paginate(10); // Remove orderBy
+
+        return view('admin.index', compact('admins', 'search')); // Remove sortBy and sortDirection
     }
 
     public function create()

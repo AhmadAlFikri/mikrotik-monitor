@@ -22,11 +22,31 @@
         </a>
     </div>
 
+    <div class="mb-4">
+        <form method="GET" action="{{ url('/admin') }}" class="flex items-center space-x-2">
+            <input type="text" name="search" placeholder="Cari admin..."
+                   value="{{ request('search') }}"
+                   class="flex-grow px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <button type="submit"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md shadow-sm text-sm transition">
+                Cari
+            </button>
+            @if(request('search'))
+                <a href="{{ url('/admin') }}" class="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-slate-700 hover:bg-slate-50 text-sm font-medium transition">
+                    Reset
+                </a>
+            @endif
+            <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+            <input type="hidden" name="sort_direction" value="{{ request('sort_direction') }}">
+        </form>
+    </div>
+
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm align-middle">
                 <thead class="bg-slate-50 text-slate-600 font-semibold">
                     <tr class="text-left">
+                        <th class="px-6 py-3">ID</th>
                         <th class="px-6 py-3">Username</th>
                         <th class="px-6 py-3">Role</th>
                         <th class="px-6 py-3 text-right">Aksi</th>
@@ -35,6 +55,9 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($admins as $admin)
                         <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">
+                                {{ $admin->id }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">
                                 {{ $admin->username }}
                             </td>
@@ -64,7 +87,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-6 py-12 text-center text-slate-500">
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-500">
                                 Tidak ada data admin yang ditemukan.
                             </td>
                         </tr>
@@ -72,6 +95,10 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mt-4">
+        {{ $admins->links() }}
     </div>
 
     <!-- Delete Confirmation Modal -->

@@ -14,7 +14,7 @@ class DashboardController extends Controller
         return view('dashboard.index', compact('routers'));
     }
 
-    public function realtime($id)
+    public function realtime($id, \Illuminate\Http\Request $request)
     {
         $router = Router::find($id);
 
@@ -26,8 +26,28 @@ class DashboardController extends Controller
             MikrotikService::active(
                 $router->ip,
                 $router->username,
-                Crypt::decryptString($router->password)
+                Crypt::decryptString($router->password),
+                $request->get('sort_column', 'uptime'),
+                $request->get('sort_direction', 'desc')
             )
         );
+    }
+
+    public function kickUser($routerId, $userId)
+    {
+        $router = Router::find($routerId);
+
+        if (!$router) {
+            return response()->json(['success' => false, 'message' => 'Router tidak ditemukan'], 404);
+        }
+
+        $result = MikrotikService::kickUser(
+            $router->ip,
+            $router->username,
+            Crypt::decryptString($router->password),
+            $userId
+        );
+
+        return response()->json($result);
     }
 }

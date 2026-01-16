@@ -12,7 +12,7 @@ class MikrotikService
      * Ambil user hotspot aktif + hitung realtime RX/TX rate
      * Rate dihitung dari selisih bytes / interval (detik)
      */
-    public static function active(string $ip, string $user, string $pass)
+    public static function active(string $ip, string $user, string $pass, string $sort_column = 'uptime', string $sort_direction = 'desc')
     {
         // === KONEKSI API MIKROTIK ===
         $api = new Client([
@@ -43,7 +43,7 @@ class MikrotikService
         | 2️⃣ HITUNG RATE REALTIME (SEPERTI WINBOX)
         |--------------------------------------------------------------------------
         */
-        return collect($activeUsers)->map(function ($row) use ($ip, $interval) {
+        $mappedUsers = collect($activeUsers)->map(function ($row) use ($ip, $interval) {
 
             // === IDENTITAS UNIK USER (LEBIH AMAN DARI ADDRESS SAJA) ===
             $identity = md5(
@@ -83,6 +83,7 @@ class MikrotikService
             |--------------------------------------------------------------------------
             */
             return [
+                'id'                 => $row['.id'], // ‼️ PENTING untuk kick user
                 'user'               => $row['user'] ?? '-',
                 'address'            => $row['address'] ?? '-',
                 'mac'                => $row['mac-address'] ?? '-',
@@ -102,6 +103,36 @@ class MikrotikService
 
                 'login_by'           => $row['login-by'] ?? '-',
             ];
-        })->values();
+        });
+
+        // SORTING
+        if ($sort_direction === 'asc') {
+            $sortedUsers = $mappedUsers->sortBy($sort_column);
+        } else {
+            $sortedUsers = $mappedUsers->sortByDesc($sort_column);
+        }
+
+        return $sortedUsers->values();
+    }
+
+    public static function kickUser(string $ip, string $user, string $pass, string $userId)
+    {
+        try {
+            $api = new Client([
+                'host'    => $ip,
+                'user'    => $user,
+                'pass'    => $pass,
+                'timeout' => 5,
+            ]);
+
+            $query = new Query('/ip/hotspot/active/remove');
+            $query->equal('.id', $userId);
+
+            $api->query($query)->read();
+
+            return ['success' => true];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 }
