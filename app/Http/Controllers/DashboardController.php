@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 $router->ip,
                 $router->username,
                 Crypt::decryptString($router->password),
+                $router->name,
                 $request->get('sort_column', 'uptime'),
                 $request->get('sort_direction', 'desc')
             )

@@ -23,7 +23,7 @@
             </span>
         </a>
 
-        <div class="w-full sm:max-w-md bg-white shadow-md rounded-lg px-6 py-8">
+        <div id="login-container" class="w-full sm:max-w-md bg-white shadow-md rounded-lg px-6 py-8 transition-opacity duration-500 ease-in-out">
 
             <h2 class="text-2xl font-bold text-center mb-1 text-slate-800">
                 Selamat Datang Kembali
@@ -117,12 +117,15 @@
         }
 
         document.getElementById('loginForm').addEventListener('submit', function() {
-            // Optional: You can uncomment this if you have a loading component
-            // const overlay = document.getElementById('loading-overlay');
-            // if(overlay) {
-            //     overlay.classList.remove('opacity-0', 'pointer-events-none');
-            //     overlay.classList.add('opacity-100');
-            // }
+            const overlay = document.getElementById('loading-overlay');
+            const loginContainer = document.getElementById('login-container');
+            
+            if(overlay) {
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+            }
+            if(loginContainer) {
+                loginContainer.classList.add('opacity-0');
+            }
         });
     </script>
 </body>

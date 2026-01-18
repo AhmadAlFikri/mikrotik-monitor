@@ -35,6 +35,9 @@ Route::middleware('adminOnly')->group(function () {
 
     // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/bandwidth-report', [DashboardController::class, 'index']);
+    Route::get('/dashboard/bandwidth-report/internet', [DashboardController::class, 'index']);
+    Route::get('/dashboard/bandwidth-report/ethernet', [DashboardController::class, 'index']);
 
     // REALTIME API (AJAX / FETCH)
     Route::get('/api/router/{id}', [DashboardController::class, 'realtime']);
@@ -45,6 +48,7 @@ Route::middleware('adminOnly')->group(function () {
 
     // REPORT
     Route::get('/report/monthly', [ReportController::class, 'monthly']);
+    Route::get('/report/sessions', [ReportController::class, 'sessionLogs']);
 });
 
 /*

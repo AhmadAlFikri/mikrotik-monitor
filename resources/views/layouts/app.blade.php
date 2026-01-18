@@ -40,12 +40,73 @@
 
         <!-- NAVIGATION -->
         <nav class="flex-grow px-4 space-y-2">
-            <x-nav-link href="/dashboard" :active="request()->is('dashboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                <span>Dashboard</span>
-            </x-nav-link>
+            <div x-data="{ open: {{ request()->is('dashboard*') ? 'true' : 'false' }} }" class="relative">
+                <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
+                               transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                               {{ request()->is('dashboard*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                    <div class="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <span>Dashboard</span>
+                    </div>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="mt-2 space-y-2 pl-6">
+                    <a href="/dashboard"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('dashboard') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <span>Dashboard Utama</span>
+                    </a>
+                    <div x-data="{ open: {{ request()->is('dashboard/bandwidth-report*') ? 'true' : 'false' }} }" class="relative">
+                        <button @click="open = !open"
+                                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
+                                       transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                                       {{ request()->is('dashboard/bandwidth-report*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                            <div class="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span>Laporan Bandwidth</span>
+                            </div>
+                            <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                             class="mt-2 space-y-2 pl-6">
+                            <a href="/dashboard/bandwidth-report/internet"
+                               class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                                      text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                                      {{ request()->is('dashboard/bandwidth-report/internet') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.562a4.5 4.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.142 0M1.394 8.394a15 15 0 0121.213 0" />
+                                </svg>
+                                <span>Internet</span>
+                            </a>
+                            <a href="/dashboard/bandwidth-report/ethernet"
+                               class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                                      text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                                      {{ request()->is('dashboard/bandwidth-report/ethernet') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                                </svg>
+                                <span>Ethernet</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <x-nav-link href="/router/add" :active="request()->is('router*')">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -54,12 +115,44 @@
                 <span>Tambah Router</span>
             </x-nav-link>
 
-            <x-nav-link href="/report/monthly" :active="request()->is('report*')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                </svg>
-                <span>Laporan Bulanan</span>
-            </x-nav-link>
+            <div x-data="{ open: {{ request()->is('report*') ? 'true' : 'false' }} }" class="relative">
+                <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
+                               transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                               {{ request()->is('report*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                    <div class="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                        </svg>
+                        <span>Report</span>
+                    </div>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="mt-2 space-y-2 pl-6">
+                    <a href="/report/monthly"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('report/monthly') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.562a4.5 4.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.142 0M1.394 8.394a15 15 0 0121.213 0" />
+                        </svg>
+                        <span>Monthly Report</span>
+                    </a>
+                    <a href="/report/sessions"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('report/sessions') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Session Logs</span>
+                    </a>
+                </div>
+            </div>
 
             @if(session('role') === 'administrator')
                 <x-nav-link href="/admin" :active="request()->is('admin*')">
@@ -112,7 +205,7 @@
         </header>
 
         <!-- CONTENT -->
-        <main class="flex-1 overflow-y-auto bg-slate-100">
+        <main class="flex-1 overflow-y-auto bg-slate-100 opacity-0 transition-opacity duration-500 ease-in-out">
             <div class="container mx-auto px-6 py-8">
                 @yield('content')
             </div>
@@ -150,6 +243,51 @@ function openLogoutModal(){
 function closeLogoutModal(){
     document.getElementById('logoutModal').classList.add('hidden');
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    const mainContent = document.querySelector('main');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    // Fade in content on initial load
+    if (mainContent) {
+        mainContent.classList.remove('opacity-0');
+    }
+    if (loadingOverlay) {
+        // Ensure loader is hidden on back/forward navigation
+        loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // Show loader and fade out content when navigating away
+    const links = document.querySelectorAll('a:not([target="_blank"])');
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Check if it's a normal navigation link
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+                if (mainContent) {
+                    mainContent.style.transition = 'opacity 0.3s ease-out';
+                    mainContent.classList.add('opacity-0');
+                }
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            }
+        });
+    });
+
+    // Handle back/forward cache
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            if (mainContent) {
+                mainContent.style.transition = 'none'; // No transition on bfcache restore
+                mainContent.classList.remove('opacity-0');
+            }
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+    });
+});
 </script>
 
 </body>

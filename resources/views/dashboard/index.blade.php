@@ -4,8 +4,8 @@
 
 @section('content')
 
-<!-- ================= FILTERS ================= -->
-<div class="mb-6 grid md:grid-cols-2 gap-6">
+<!-- ================= FILTERS & STATS ================= -->
+<div class="mb-6 grid md:grid-cols-3 gap-6">
     <div class="bg-white p-4 rounded-lg shadow-sm">
         <label for="routerSelect" class="block text-sm font-medium text-slate-600 mb-1">
             Pilih MikroTik
@@ -30,6 +30,15 @@
                       focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                placeholder="Cari berdasarkan username, ip, atau mac...">
     </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-sm">
+        <h3 class="text-sm font-medium text-slate-600 mb-1">
+            User Aktif
+        </h3>
+        <p id="active-user-count" class="text-2xl font-bold text-slate-800">
+            -
+        </p>
+    </div>
 </div>
 
 <!-- ================= ALERT ================= -->
@@ -48,8 +57,7 @@
     </div>
 </div>
 
-<!-- ================= TABLE ================= -->
-<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+<div class="bg-white rounded-lg shadow-sm">
     <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
         <h3 class="font-semibold text-slate-700">User Aktif</h3>
         <div class="flex items-center gap-2">
@@ -112,6 +120,7 @@
                     <th id="col-mac" class="px-6 py-3">MAC Address</th>
                     <th id="col-uptime" class="px-6 py-3">Uptime</th>
                     <th id="col-idle_time" class="px-6 py-3">Idle Time</th>
+                    <th id="col-session_time_left" class="px-6 py-3">Session Left</th>
                     <th id="col-rx_rate" class="px-6 py-3">Rx Rate</th>
                     <th id="col-tx_rate" class="px-6 py-3">Tx Rate</th>
                     <th id="col-bytes_in" class="px-6 py-3">Bytes In</th>
@@ -121,7 +130,7 @@
             </thead>
             <tbody id="data" class="divide-y divide-slate-200">
                 <tr>
-                    <td colspan="11" class="text-center p-8 text-slate-500">
+                    <td colspan="12" class="text-center p-8 text-slate-500">
                         Memuat data...
                     </td>
                 </tr>
@@ -165,11 +174,12 @@ const columnState = {
     mac:       { label: 'MAC Address',visible: false, index: 3 },
     uptime:    { label: 'Uptime',     visible: true, index: 4 },
     idle_time: { label: 'Idle Time',  visible: false, index: 5 },
-    rx_rate:   { label: 'Rx Rate',    visible: true, index: 6 },
-    tx_rate:   { label: 'Tx Rate',    visible: true, index: 7 },
-    bytes_in:  { label: 'Bytes In',   visible: true, index: 8 },
-    bytes_out: { label: 'Bytes Out',  visible: true, index: 9 },
-    login_by:  { label: 'Login By',   visible: false, index: 10 },
+    session_time_left: { label: 'Session Left', visible: true, index: 6 },
+    rx_rate:   { label: 'Rx Rate',    visible: true, index: 7 },
+    tx_rate:   { label: 'Tx Rate',    visible: true, index: 8 },
+    bytes_in:  { label: 'Bytes In',   visible: true, index: 9 },
+    bytes_out: { label: 'Bytes Out',  visible: true, index: 10 },
+    login_by:  { label: 'Login By',   visible: false, index: 11 },
 };
 
 /* ================= UTIL ================= */
@@ -190,7 +200,7 @@ function formatRate(bps){
 }
 
 function getStatus(u) {
-    if(u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) return ['Heavy', 'bg-red-100 text-red-800'];
+    if(u.rx_rate > 20_000_000 || u.tx_rate > 20_000_000) return ['Heavy', 'bg-red-100 text-red-800'];
     const idle = u.idle_time.includes('s'); // crude but effective
     if(!idle) return ['Idle', 'bg-yellow-100 text-yellow-800'];
     return ['Active', 'bg-green-100 text-green-800'];
@@ -345,6 +355,7 @@ function loadData(){
     fetch(url)
     .then(r => r.json())
     .then(data => {
+        document.getElementById('active-user-count').textContent = data.length;
         let html = '';
         let target = selectedUser ? data.find(x => x.user === selectedUser) : null;
         if (!target && data.length) {
@@ -354,11 +365,11 @@ function loadData(){
 
         data.forEach(u => {
             const [st, color] = getStatus(u);
-            if ((u.rx_rate > 5_000_000 || u.tx_rate > 5_000_000) && !alertShown[u.user]) {
+            if ((u.rx_rate > 20_000_000 || u.tx_rate > 20_000_000) && !alertShown[u.user]) {
                 alertShown[u.user] = true;
                 const alertBox = document.getElementById('alertBox');
                 alertBox.classList.remove('hidden');
-                alertBox.innerHTML = `<strong>Peringatan Bandwidth Tinggi!</strong> Pengguna <strong>${u.user}</strong> menggunakan traffic lebih dari 5 Mbps.`;
+                alertBox.innerHTML = `<strong>Peringatan Bandwidth Tinggi!</strong> Pengguna <strong>${u.user}</strong> menggunakan traffic lebih dari 20 Mbps.`;
             }
 
             html+=`
@@ -370,6 +381,7 @@ function loadData(){
                 <td data-col="mac" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.mac}</td>
                 <td data-col="uptime" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.uptime}</td>
                 <td data-col="idle_time" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.idle_time}</td>
+                <td data-col="session_time_left" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.session_time_left}</td>
                 <td data-col="rx_rate" class="px-6 py-4 whitespace-nowrap text-green-700 font-medium">${formatRate(u.rx_rate)}</td>
                 <td data-col="tx_rate" class="px-6 py-4 whitespace-nowrap text-blue-700 font-medium">${formatRate(u.tx_rate)}</td>
                 <td data-col="bytes_in" class="px-6 py-4 whitespace-nowrap text-slate-500">${formatBytes(u.bytes_in)}</td>
@@ -379,7 +391,7 @@ function loadData(){
         });
 
         if(!data.length) {
-            html=`<tr><td colspan="11" class="text-center p-8 text-slate-500">Tidak ada user aktif pada router ini.</td></tr>`;
+            html=`<tr><td colspan="12" class="text-center p-8 text-slate-500">Tidak ada user aktif pada router ini.</td></tr>`;
         }
         document.getElementById('data').innerHTML = html;
         applyColumnVisibility();

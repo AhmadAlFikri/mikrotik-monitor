@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\SessionLog;
+use Carbon\Carbon;
 use RouterOS\Client;
 use RouterOS\Query;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +14,7 @@ class MikrotikService
      * Ambil user hotspot aktif + hitung realtime RX/TX rate
      * Rate dihitung dari selisih bytes / interval (detik)
      */
-    public static function active(string $ip, string $user, string $pass, string $sort_column = 'uptime', string $sort_direction = 'desc')
+    public static function active(string $ip, string $user, string $pass, string $routerName, string $sort_column = 'uptime', string $sort_direction = 'desc')
     {
         // === KONEKSI API MIKROTIK ===
         $api = new Client([
@@ -40,7 +42,40 @@ class MikrotikService
 
         /*
         |--------------------------------------------------------------------------
-        | 2️⃣ HITUNG RATE REALTIME (SEPERTI WINBOX)
+        | 2️⃣ LOG SESSION PENGGUNA
+        |--------------------------------------------------------------------------
+        */
+        $sessionCacheKey = "active_sessions_{$ip}";
+        $previousSessions = Cache::get($sessionCacheKey, []);
+        $currentSessions = [];
+
+        foreach ($activeUsers as $activeUser) {
+            $currentSessions[$activeUser['.id']] = [
+                'user' => $activeUser['user'],
+                'uptime' => $activeUser['uptime'],
+            ];
+        }
+
+        $loggedOutUsers = array_diff_key($previousSessions, $currentSessions);
+
+        foreach ($loggedOutUsers as $id => $session) {
+            $uptimeSeconds = self::parseUptime($session['uptime']);
+            $loginTime = Carbon::now()->subSeconds($uptimeSeconds);
+
+            SessionLog::create([
+                'username' => $session['user'],
+                'router_name' => $routerName,
+                'login_time' => $loginTime,
+                'logout_time' => Carbon::now(),
+            ]);
+        }
+
+        Cache::put($sessionCacheKey, $currentSessions, now()->addMinutes(5));
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3️⃣ HITUNG RATE REALTIME (SEPERTI WINBOX)
         |--------------------------------------------------------------------------
         */
         $mappedUsers = collect($activeUsers)->map(function ($row) use ($ip, $interval) {
@@ -79,7 +114,7 @@ class MikrotikService
 
             /*
             |--------------------------------------------------------------------------
-            | 3️⃣ RETURN DATA KE DASHBOARD
+            | 4️⃣ RETURN DATA KE DASHBOARD
             |--------------------------------------------------------------------------
             */
             return [
@@ -113,6 +148,35 @@ class MikrotikService
         }
 
         return $sortedUsers->values();
+    }
+
+    private static function parseUptime(string $uptime): int
+    {
+        $totalSeconds = 0;
+        preg_match_all('/(\d+)([wdhms])/', $uptime, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $value = (int)$match[1];
+            $unit = $match[2];
+            switch ($unit) {
+                case 'w':
+                    $totalSeconds += $value * 604800;
+                    break;
+                case 'd':
+                    $totalSeconds += $value * 86400;
+                    break;
+                case 'h':
+                    $totalSeconds += $value * 3600;
+                    break;
+                case 'm':
+                    $totalSeconds += $value * 60;
+                    break;
+                case 's':
+                    $totalSeconds += $value;
+                    break;
+            }
+        }
+        return $totalSeconds;
     }
 
     public static function kickUser(string $ip, string $user, string $pass, string $userId)
