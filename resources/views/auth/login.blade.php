@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - MikroTik Monitor</title>
+    <title>Login - Nemodas</title>
 
     @vite('resources/css/app.css')
 </head>
@@ -14,14 +14,21 @@
 
     <div class="min-h-screen flex flex-col items-center justify-center sm:p-6">
 
-        <a href="/" class="flex items-center justify-center gap-2 mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <span class="text-2xl font-bold tracking-wide text-slate-800">
-                MikroTik Monitor
-            </span>
-        </a>
+        <div class="flex flex-col items-center justify-center gap-2 mb-6">
+            <a href="/" class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <div class="text-center">
+                    <h1 class="font-poppins text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+                        Nemodas
+                    </h1>
+                    <p class="font-poppins text-xs text-slate-500 tracking-wide">
+                        Network Monitoring Dashboard System
+                    </p>
+                </div>
+            </a>
+        </div>
 
         <div id="login-container" class="w-full sm:max-w-md bg-white shadow-md rounded-lg px-6 py-8 transition-opacity duration-500 ease-in-out">
 
@@ -95,7 +102,7 @@
         </div>
 
         <p class="text-center text-sm text-slate-500 mt-8">
-            &copy; {{ date('Y') }} MikroTik Monitor. All rights reserved.
+            &copy; {{ date('Y') }} Nemodas. All rights reserved.
         </p>
     </div>
 

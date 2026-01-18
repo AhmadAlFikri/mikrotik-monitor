@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Selamat Datang di MikroTik Monitor</title>
+    <title>Selamat Datang di Nemodas</title>
 
     @vite('resources/css/app.css')
 </head>
@@ -20,9 +20,14 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            <span class="text-xl font-bold tracking-wide text-slate-800">
-                                MikroTik Monitor
-                            </span>
+                            <div class="text-center">
+                                <h1 class="font-poppins text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+                                    Nemodas
+                                </h1>
+                                <p class="font-poppins text-xs text-slate-500 tracking-wide">
+                                    Network Monitoring Dashboard System
+                                </p>
+                            </div>
                         </a>
                     </div>
                     <div class="flex items-center">
@@ -41,7 +46,7 @@
         <main class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center py-24 sm:py-32">
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight">
-                    Pantau Jaringan MikroTik Anda
+                    Pantau Jaringan Anda
                     <span class="block text-indigo-600">Dengan Mudah dan Real-time</span>
                 </h1>
                 <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-600">
@@ -97,7 +102,7 @@
         <!-- Footer -->
         <footer class="mt-16 sm:mt-24 border-t">
             <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
-                <p>&copy; {{ date('Y') }} MikroTik Monitor. Dibuat dengan cinta dan kode.</p>
+                <p>&copy; {{ date('Y') }} Nemodas. Dibuat dengan cinta dan kode.</p>
             </div>
         </footer>
     </div>

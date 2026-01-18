@@ -3,7 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'MikroTik Monitor')</title>
+    <title>@yield('title', 'Nemodas Network Monitoring Dashboard System')</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 
     <!-- Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -28,13 +34,18 @@
 
         <!-- LOGO -->
         <div class="flex items-center justify-center h-20 shrink-0">
-            <a href="/dashboard" class="flex items-center gap-2">
+            <a href="/dashboard" class="flex items-center gap-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <span class="text-xl font-bold tracking-wide text-slate-800">
-                    MikroTik Monitor
-                </span>
+                <div class="text-center">
+                    <h1 class="font-poppins text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+                        Nemodas
+                    </h1>
+                    <p class="font-poppins text-xs text-slate-500 tracking-wide">
+                        Network Monitoring Dashboard System
+                    </p>
+                </div>
             </a>
         </div>
 
@@ -199,7 +210,7 @@
                               d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <h1 class="text-xl font-bold text-slate-700">@yield('title')</h1>
+                <h1 class="text-xl font-bold text-slate-700">@yield('title', 'Nemodas Network Monitoring Dashboard System')</h1>
                 <div class="w-6"></div>
             </div>
         </header>
