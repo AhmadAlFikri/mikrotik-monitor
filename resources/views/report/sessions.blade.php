@@ -16,6 +16,14 @@
                 Riwayat sesi pengguna yang telah berakhir.
             </p>
         </div>
+        <div class="flex space-x-2">
+            <a href="{{ url('/report/sessions/excel') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                Export to Excel
+            </a>
+            <a href="{{ url('/report/sessions/pdf') }}" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                Export to PDF
+            </a>
+        </div>
     </div>
 
     <!-- Session Log Table -->

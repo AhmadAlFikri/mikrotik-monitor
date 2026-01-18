@@ -49,6 +49,8 @@ Route::middleware('adminOnly')->group(function () {
     // REPORT
     Route::get('/report/monthly', [ReportController::class, 'monthly']);
     Route::get('/report/sessions', [ReportController::class, 'sessionLogs']);
+    Route::get('/report/sessions/excel', [ReportController::class, 'exportExcel']);
+    Route::get('/report/sessions/pdf', [ReportController::class, 'exportPdf']);
 });
 
 /*

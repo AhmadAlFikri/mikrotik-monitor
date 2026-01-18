@@ -30,21 +30,34 @@
 
     <!-- Filters -->
     <div class="mt-6 flex justify-center">
-        <div class="flex items-center gap-1 bg-slate-200/60 p-1.5 rounded-full">
-            <a href="?filter=1D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '1D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1D</a>
-            <a href="?filter=5D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '5D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5D</a>
-            <a href="?filter=1M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter', '1M') == '1M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1M</a>
-            <a href="?filter=3M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '3M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">3M</a>
-            <a href="?filter=6M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '6M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">6M</a>
-            <a href="?filter=1Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '1Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1Y</a>
-            <a href="?filter=5Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == '5Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5Y</a>
-            <a href="?filter=All" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ request('filter') == 'All' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">All</a>
-        </div>
+        <form id="filterForm" action="" method="GET" class="flex items-center gap-4">
+            <div class="flex items-center gap-1 bg-slate-200/60 p-1.5 rounded-full">
+                <input type="hidden" name="filter" id="filterInput" value="{{ $filter }}">
+                <button type="submit" name="filter" value="1D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1D</button>
+                <button type="submit" name="filter" value="5D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '5D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5D</button>
+                <button type="submit" name="filter" value="1M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1M</button>
+                <button type="submit" name="filter" value="3M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '3M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">3M</button>
+                <button type="submit" name="filter" value="6M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '6M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">6M</button>
+                <button type="submit" name="filter" value="1Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1Y</button>
+                <button type="submit" name="filter" value="5Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '5Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5Y</button>
+                <button type="submit" name="filter" value="All" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == 'All' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">All</button>
+                <select name="user" id="userSelect" class="px-6 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 bg-transparent text-slate-600 hover:text-indigo-600">
+                    <option value="all" class="bg-white text-slate-600">All Users</option>
+                    @foreach($users as $user)
+                        <option value="{{ $user }}" {{ $selectedUser == $user ? 'selected' : '' }} class="bg-white text-slate-600">{{ $user }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </form>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    document.getElementById('userSelect').addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter') || '1M';
 

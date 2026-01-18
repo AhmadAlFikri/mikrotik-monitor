@@ -7,12 +7,18 @@ use App\Models\TrafficStat;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SessionLogsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
     public function monthly(Request $request)
     {
         $filter = $request->query('filter', '1M');
+        $selectedUser = $request->query('user');
+
+        $users = TrafficStat::select('user')->distinct()->pluck('user');
 
         $query = TrafficStat::query();
         $selectRaw = '';
@@ -21,6 +27,10 @@ class ReportController extends Controller
 
         $endDate = Carbon::now();
         $startDate = null;
+
+        if ($selectedUser && $selectedUser !== 'all') {
+            $query->where('user', $selectedUser);
+        }
 
         switch ($filter) {
             case '1D':
@@ -82,13 +92,25 @@ class ReportController extends Controller
                       ->orderBy(DB::raw($orderBy))
                       ->get();
 
-        return view('report.monthly', compact('data'));
+        return view('report.monthly', compact('data', 'users', 'selectedUser', 'filter'));
     }
 
     public function sessionLogs()
     {
         $sessionLogs = SessionLog::orderBy('login_time', 'desc')->paginate(15);
         return view('report.sessions', compact('sessionLogs'));
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new SessionLogsExport, 'session-logs.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $sessionLogs = SessionLog::orderBy('login_time', 'desc')->get();
+        $pdf = Pdf::loadView('report.sessions_pdf', compact('sessionLogs'));
+        return $pdf->download('session-logs.pdf');
     }
 }
 
