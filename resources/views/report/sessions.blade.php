@@ -61,16 +61,16 @@
                         {{ $log->router_name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {{ \Carbon\Carbon::parse($log->login_time)->format('d M Y') }}
+                        {{ \Carbon\Carbon::parse($log->login_time)->timezone('Asia/Jakarta')->format('d-m-Y') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {{ \Carbon\Carbon::parse($log->login_time)->format('H:i:s') }}
+                        {{ \Carbon\Carbon::parse($log->login_time)->timezone('Asia/Jakarta')->format('H:i:s') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {{ \Carbon\Carbon::parse($log->logout_time)->format('d M Y, H:i:s') }}
+                        {{ \Carbon\Carbon::parse($log->logout_time)->timezone('Asia/Jakarta')->format('d-m-Y H:i:s') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {{ \Carbon\Carbon::parse($log->logout_time)->diffForHumans(\Carbon\Carbon::parse($log->login_time), true) }}
+                        {{ \Carbon\Carbon::parse($log->logout_time)->timezone('Asia/Jakarta')->diffForHumans(\Carbon\Carbon::parse($log->login_time)->timezone('Asia/Jakarta'), true) }}
                     </td>
                 </tr>
                 @endforeach
