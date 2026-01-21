@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RouterController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\InterfaceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,10 @@ Route::middleware('adminOnly')->group(function () {
     Route::get('/report/sessions', [ReportController::class, 'sessionLogs']);
     Route::get('/report/sessions/excel', [ReportController::class, 'exportExcel']);
     Route::get('/report/sessions/pdf', [ReportController::class, 'exportPdf']);
+
+    // INTERFACES
+    Route::get('/interfaces', [InterfaceController::class, 'index']);
+    Route::get('/api/router-interfaces/{id}', [InterfaceController::class, 'realtime']);
 });
 
 /*

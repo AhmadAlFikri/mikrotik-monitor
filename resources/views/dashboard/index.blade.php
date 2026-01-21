@@ -355,6 +355,20 @@ function loadData(){
     fetch(url)
     .then(r => r.json())
     .then(data => {
+        const alertBox = document.getElementById('alertBox');
+        const dataContainer = document.getElementById('data');
+
+        if (data && data.error) {
+            const errorMessage = `Gagal terhubung ke router: ${data.error}`;
+            alertBox.classList.remove('hidden');
+            alertBox.innerHTML = `<strong>Error!</strong> ${errorMessage}`;
+            dataContainer.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500 font-medium">${errorMessage}</td></tr>`;
+            document.getElementById('active-user-count').textContent = '0';
+            resetChart();
+            return;
+        }
+
+        alertBox.classList.add('hidden');
         document.getElementById('active-user-count').textContent = data.length;
         let html = '';
         let target = selectedUser ? data.find(x => x.user === selectedUser) : null;
@@ -385,7 +399,7 @@ function loadData(){
                 <td data-col="rx_rate" class="px-6 py-4 whitespace-nowrap text-green-700 font-medium">${formatRate(u.rx_rate)}</td>
                 <td data-col="tx_rate" class="px-6 py-4 whitespace-nowrap text-blue-700 font-medium">${formatRate(u.tx_rate)}</td>
                 <td data-col="bytes_in" class="px-6 py-4 whitespace-nowrap text-slate-500">${formatBytes(u.bytes_in)}</td>
-                <td data-col="bytes_out" class="px-6 py-4 whitespace-nowrap text-slate-500">${formatBytes(u.bytes_out)}</td>
+                <td data-col="bytes_out" class="px-6 py-array whitespace-nowrap text-slate-500">${formatBytes(u.bytes_out)}</td>
                 <td data-col="login_by" class="px-6 py-4 whitespace-nowrap text-slate-500">${u.login_by}</td>
             </tr>`;
         });
@@ -393,8 +407,15 @@ function loadData(){
         if(!data.length) {
             html=`<tr><td colspan="12" class="text-center p-8 text-slate-500">Tidak ada user aktif pada router ini.</td></tr>`;
         }
-        document.getElementById('data').innerHTML = html;
+        dataContainer.innerHTML = html;
         applyColumnVisibility();
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        const alertBox = document.getElementById('alertBox');
+        alertBox.classList.remove('hidden');
+        alertBox.innerHTML = '<strong>Network Error:</strong> Tidak dapat terhubung ke server. Pastikan server berjalan dan tidak ada masalah jaringan.';
+        document.getElementById('data').innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Tidak dapat terhubung ke server.</td></tr>`;
     })
     .finally(() => isLoading = false);
 }

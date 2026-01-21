@@ -1,0 +1,3 @@
+<?php
+
+// app/helpers.php
