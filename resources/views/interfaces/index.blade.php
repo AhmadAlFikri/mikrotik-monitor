@@ -43,8 +43,8 @@
                     <th class="px-6 py-3">Type</th>
                     <th class="px-6 py-3">MAC Address</th>
                     <th class="px-6 py-3">Last Link Up</th>
-                    <th class="px-6 py-3">Rx Rate</th>
-                    <th class="px-6 py-3">Tx Rate</th>
+                    <th class="px-6 py-3">Rx Bytes</th>
+                    <th class="px-6 py-3">Tx Bytes</th>
                 </tr>
             </thead>
             <tbody id="data" class="divide-y divide-slate-200">
@@ -62,11 +62,16 @@
     const POLL_INTERVAL = 2000;
     let isLoading = false;
 
-    function formatRate(bps){
-        if (bps >= 1024 * 1024 * 1024) return (bps / (1024 * 1024 * 1024)).toFixed(2) + ' Gbps';
-        if (bps >= 1024 * 1024) return (bps / (1024 * 1024)).toFixed(2) + ' Mbps';
-        if (bps >= 1024) return (bps / 1024).toFixed(2) + ' Kbps';
-        return bps + ' bps';
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
     function changeRouter() {
@@ -128,8 +133,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-slate-500">${item.type}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-500">${item['mac-address'] || '-'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-500">${item['last-link-up-time'] || 'n/a'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-green-700 font-medium">${formatRate(item['rx-rate'])}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-blue-700 font-medium">${formatRate(item['tx-rate'])}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-green-700 font-medium">${formatBytes(item['rx-byte'])}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-blue-700 font-medium">${formatBytes(item['tx-byte'])}</td>
                         </tr>
                     `;
                 });

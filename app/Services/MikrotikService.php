@@ -195,7 +195,7 @@ class MikrotikService
             ]);
 
             $query = new Query('/interface/print');
-            $query->equal('.proplist', '.id,name,type,mac-address,last-link-up-time,running,disabled');
+            $query->equal('.proplist', '.id,name,type,mac-address,last-link-up-time,running,disabled,rx-byte,tx-byte');
 
             $interfaces = $api->query($query)->read();
 
