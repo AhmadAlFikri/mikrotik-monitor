@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Router;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 
 class RouterController extends Controller

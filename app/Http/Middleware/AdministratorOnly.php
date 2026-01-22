@@ -9,7 +9,7 @@ class AdministratorOnly
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!session('admin_login') || session('role') !== 'administrator') {
+        if (! session('admin_login') || session('role') !== 'administrator') {
             abort(403);
         }
 

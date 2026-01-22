@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('traffic_stats', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('router_id');
-    $table->string('user')->nullable();
-    $table->bigInteger('rx_rate')->default(0);
-    $table->bigInteger('tx_rate')->default(0);
-    $table->date('stat_date');
-    $table->timestamps();
+            $table->id();
+            $table->unsignedBigInteger('router_id');
+            $table->string('user')->nullable();
+            $table->bigInteger('rx_rate')->default(0);
+            $table->bigInteger('tx_rate')->default(0);
+            $table->date('stat_date');
+            $table->timestamps();
         });
 
     }

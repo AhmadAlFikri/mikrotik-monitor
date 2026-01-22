@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Models\SessionLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use RouterOS\Client;
 use RouterOS\Query;
-use Illuminate\Support\Facades\Cache;
 
 class MikrotikService
 {
@@ -19,9 +19,9 @@ class MikrotikService
         try {
             // === KONEKSI API MIKROTIK ===
             $api = new Client([
-                'host'    => $ip,
-                'user'    => $user,
-                'pass'    => $pass,
+                'host' => $ip,
+                'user' => $user,
+                'pass' => $pass,
                 'timeout' => 5,
             ]);
 
@@ -73,7 +73,6 @@ class MikrotikService
 
             Cache::put($sessionCacheKey, $currentSessions, now()->addMinutes(5));
 
-
             /*
             |--------------------------------------------------------------------------
             | 3️⃣ HITUNG RATE REALTIME (SEPERTI WINBOX)
@@ -83,8 +82,8 @@ class MikrotikService
 
                 // === IDENTITAS UNIK USER (LEBIH AMAN DARI ADDRESS SAJA) ===
                 $identity = md5(
-                    ($row['address'] ?? '-') .
-                    ($row['mac-address'] ?? '-') .
+                    ($row['address'] ?? '-').
+                    ($row['mac-address'] ?? '-').
                     ($row['user'] ?? '-')
                 );
 
@@ -119,25 +118,25 @@ class MikrotikService
                 |--------------------------------------------------------------------------
                 */
                 return [
-                    'id'                 => $row['.id'], // ‼️ PENTING untuk kick user
-                    'user'               => $row['user'] ?? '-',
-                    'address'            => $row['address'] ?? '-',
-                    'mac'                => $row['mac-address'] ?? '-',
-                    'server'             => $row['server'] ?? '-',
-                    'domain'             => $row['domain'] ?? '-',
-                    'uptime'             => $row['uptime'] ?? '-',
-                    'idle_time'          => $row['idle-time'] ?? '-',
-                    'session_time_left'  => $row['session-time-left'] ?? '-',
+                    'id' => $row['.id'], // ‼️ PENTING untuk kick user
+                    'user' => $row['user'] ?? '-',
+                    'address' => $row['address'] ?? '-',
+                    'mac' => $row['mac-address'] ?? '-',
+                    'server' => $row['server'] ?? '-',
+                    'domain' => $row['domain'] ?? '-',
+                    'uptime' => $row['uptime'] ?? '-',
+                    'idle_time' => $row['idle-time'] ?? '-',
+                    'session_time_left' => $row['session-time-left'] ?? '-',
 
                     // TOTAL BYTES
-                    'bytes_in'           => $rxBytes,
-                    'bytes_out'          => $txBytes,
+                    'bytes_in' => $rxBytes,
+                    'bytes_out' => $txBytes,
 
                     // 🔥 REALTIME RATE (Bps)
-                    'rx_rate'            => round($rxRate, 2),
-                    'tx_rate'            => round($txRate, 2),
+                    'rx_rate' => round($rxRate, 2),
+                    'tx_rate' => round($txRate, 2),
 
-                    'login_by'           => $row['login-by'] ?? '-',
+                    'login_by' => $row['login-by'] ?? '-',
                 ];
             });
 
@@ -161,7 +160,7 @@ class MikrotikService
         preg_match_all('/(\d+)([wdhms])/', $uptime, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
-            $value = (int)$match[1];
+            $value = (int) $match[1];
             $unit = $match[2];
             switch ($unit) {
                 case 'w':
@@ -181,16 +180,17 @@ class MikrotikService
                     break;
             }
         }
+
         return $totalSeconds;
     }
 
-    public static function getInterfaces(string $ip, string $user, string $pass)
+    public static function getInterfaces(string $ip, string $user, string $pass, string $sort_column = 'name', string $sort_direction = 'asc')
     {
         try {
             $api = new Client([
-                'host'    => $ip,
-                'user'    => $user,
-                'pass'    => $pass,
+                'host' => $ip,
+                'user' => $user,
+                'pass' => $pass,
                 'timeout' => 5,
             ]);
 
@@ -206,12 +206,22 @@ class MikrotikService
             $traffic = $api->query($trafficQuery)->read();
 
             // Gabungkan traffic ke data interface
-            return collect($interfaces)->map(function ($interface) use ($traffic) {
+            $mappedInterfaces = collect($interfaces)->map(function ($interface) use ($traffic) {
                 $interfaceTraffic = collect($traffic)->firstWhere('name', $interface['name']);
                 $interface['rx-rate'] = $interfaceTraffic['rx-bits-per-second'] ?? 0;
                 $interface['tx-rate'] = $interfaceTraffic['tx-bits-per-second'] ?? 0;
+                // Cast bytes to integers for correct sorting
+                $interface['rx-byte'] = (int) ($interface['rx-byte'] ?? 0);
+                $interface['tx-byte'] = (int) ($interface['tx-byte'] ?? 0);
+
                 return $interface;
-            })->toArray();
+            });
+
+            // Lakukan sorting
+            $isNumericSort = in_array($sort_column, ['rx-byte', 'tx-byte']);
+            $sortedInterfaces = $mappedInterfaces->sortBy($sort_column, $isNumericSort ? SORT_NUMERIC : SORT_REGULAR, $sort_direction === 'desc');
+
+            return $sortedInterfaces->values()->toArray();
 
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -222,9 +232,9 @@ class MikrotikService
     {
         try {
             $api = new Client([
-                'host'    => $ip,
-                'user'    => $user,
-                'pass'    => $pass,
+                'host' => $ip,
+                'user' => $user,
+                'pass' => $pass,
                 'timeout' => 5,
             ]);
 

@@ -27,13 +27,13 @@ class DatabaseSeeder extends Seeder
         Admin::create([
             'username' => 'admin',
             'password' => Hash::make('admin123'),
-            'role' => 'admin'
+            'role' => 'admin',
         ]);
 
         Admin::create([
             'username' => 'administrator',
             'password' => Hash::make('admin123'),
-            'role' => 'administrator'
+            'role' => 'administrator',
         ]);
     }
 }

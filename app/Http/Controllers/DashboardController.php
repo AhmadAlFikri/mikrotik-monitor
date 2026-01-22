@@ -11,6 +11,7 @@ class DashboardController extends Controller
     public function index()
     {
         $routers = Router::all();
+
         return view('dashboard.index', compact('routers'));
     }
 
@@ -18,7 +19,7 @@ class DashboardController extends Controller
     {
         $router = Router::find($id);
 
-        if (!$router) {
+        if (! $router) {
             return response()->json([]);
         }
 
@@ -38,7 +39,7 @@ class DashboardController extends Controller
     {
         $router = Router::find($routerId);
 
-        if (!$router) {
+        if (! $router) {
             return response()->json(['success' => false, 'message' => 'Router tidak ditemukan'], 404);
         }
 

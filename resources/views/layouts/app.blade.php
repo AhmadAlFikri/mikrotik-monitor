@@ -51,11 +51,11 @@
 
         <!-- NAVIGATION -->
         <nav class="flex-grow px-4 space-y-2">
-            <div x-data="{ open: {{ request()->is('dashboard*') ? 'true' : 'false' }} }" class="relative">
+            <div x-data="{ open: {{ request()->is('dashboard*') || request()->is('interfaces*') ? 'true' : 'false' }} }" class="relative">
                 <button @click="open = !open"
                         class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
                                transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
-                               {{ request()->is('dashboard*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                               {{ request()->is('dashboard*') || request()->is('interfaces*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
                     <div class="flex items-center gap-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -78,53 +78,17 @@
                         </svg>
                         <span>Dashboard Utama</span>
                     </a>
-                    <div x-data="{ open: {{ request()->is('dashboard/bandwidth-report*') ? 'true' : 'false' }} }" class="relative">
-                        <button @click="open = !open"
-                                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
-                                       transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
-                                       {{ request()->is('dashboard/bandwidth-report*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
-                            <div class="flex items-center gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                <span>Laporan Bandwidth</span>
-                            </div>
-                            <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-
-                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                             class="mt-2 space-y-2 pl-6">
-                            <a href="/dashboard/bandwidth-report/internet"
-                               class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
-                                      text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
-                                      {{ request()->is('dashboard/bandwidth-report/internet') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.562a4.5 4.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.142 0M1.394 8.394a15 15 0 0121.213 0" />
-                                </svg>
-                                <span>Internet</span>
-                            </a>
-                            <a href="/dashboard/bandwidth-report/ethernet"
-                               class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
-                                      text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
-                                      {{ request()->is('dashboard/bandwidth-report/ethernet') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                                </svg>
-                                <span>Ethernet</span>
-                            </a>
-                        </div>
-                    </div>
+                    <a href="/interfaces"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('interfaces*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h4a2 2 0 002-2V7a2 2 0 00-2-2h-4a2 2 0 00-2 2z" />
+                        </svg>
+                        <span>Interfaces</span>
+                    </a>
                 </div>
             </div>
-
-            <x-nav-link href="/interfaces" :active="request()->is('interfaces*')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h4a2 2 0 002-2V7a2 2 0 00-2-2h-4a2 2 0 00-2 2z" />
-                </svg>
-                <span>Interfaces</span>
-            </x-nav-link>
 
             <x-nav-link href="/router/add" :active="request()->is('router*')">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

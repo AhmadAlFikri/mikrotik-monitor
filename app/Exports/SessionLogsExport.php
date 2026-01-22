@@ -3,24 +3,43 @@
 namespace App\Exports;
 
 use App\Models\SessionLog;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Carbon\Carbon;
 
 class SessionLogsExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    protected $request;
+
+    public function __construct(Request $request)
     {
-        return SessionLog::orderBy('login_time', 'desc')->get();
+        $this->request = $request;
     }
 
     /**
-    * @return array
-    */
+     * @return \Illuminate\Support\Collection
+     */
+    public function collection()
+    {
+        $query = SessionLog::query();
+
+        // Filter by date range
+        if ($this->request->has('start_date') && $this->request->has('end_date')) {
+            $startDate = Carbon::parse($this->request->start_date)->startOfDay();
+            $endDate = Carbon::parse($this->request->end_date)->endOfDay();
+            $query->whereBetween('login_time', [$startDate, $endDate]);
+        }
+
+        // Sorting
+        $sortBy = $this->request->get('sort_by', 'login_time');
+        $sortOrder = $this->request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        return $query->get();
+    }
+
     public function headings(): array
     {
         return [
@@ -33,10 +52,8 @@ class SessionLogsExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-    * @param mixed $log
-    *
-    * @return array
-    */
+     * @param  mixed  $log
+     */
     public function map($log): array
     {
         return [

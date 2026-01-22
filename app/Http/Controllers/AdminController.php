@@ -15,8 +15,8 @@ class AdminController extends Controller
         $query = Admin::query();
 
         if ($search) {
-            $query->where('username', 'like', '%' . $search . '%')
-                  ->orWhere('role', 'like', '%' . $search . '%');
+            $query->where('username', 'like', '%'.$search.'%')
+                ->orWhere('role', 'like', '%'.$search.'%');
         }
 
         $admins = $query->paginate(10); // Remove orderBy
@@ -34,13 +34,13 @@ class AdminController extends Controller
         $request->validate([
             'username' => 'required|unique:admins',
             'password' => 'required|min:6',
-            'role' => 'required'
+            'role' => 'required',
         ]);
 
         Admin::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'role' => $request->role
+            'role' => $request->role,
         ]);
 
         return redirect('/admin')->with('success', 'Admin berhasil ditambahkan');
@@ -50,6 +50,7 @@ class AdminController extends Controller
     public function edit($id)
     {
         $admin = Admin::findOrFail($id);
+
         return view('admin.edit', compact('admin'));
     }
 
@@ -72,6 +73,7 @@ class AdminController extends Controller
     public function destroy($id)
     {
         Admin::destroy($id);
+
         return redirect('/admin')->with('success', 'Admin berhasil dihapus');
     }
 }

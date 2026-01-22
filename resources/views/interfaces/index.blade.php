@@ -32,6 +32,47 @@
 <div class="bg-white rounded-lg shadow-sm">
     <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
         <h3 class="font-semibold text-slate-700">Interfaces</h3>
+        <div class="flex items-center gap-2">
+            <!-- Tombol Urutkan Dropdown -->
+            <div class="relative" id="sort-dropdown-container">
+                <button onclick="toggleSortDropdown()"
+                        class="px-3 py-2 bg-slate-200 text-slate-700 rounded-md text-sm font-semibold hover:bg-slate-300 transition-colors">
+                    Urutkan
+                </button>
+                <div id="sort-dropdown"
+                     class="hidden absolute right-0 mt-2 w-60 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div class="py-2 px-4" role="menu" aria-orientation="vertical">
+                        <div class="mb-3">
+                            <label for="sort-column-select" class="block text-sm font-medium text-slate-600 mb-1">
+                                Urutkan berdasarkan
+                            </label>
+                            <select id="sort-column-select"
+                                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                             <label class="block text-sm font-medium text-slate-600 mb-2">
+                                Arah
+                            </label>
+                            <div class="flex items-center gap-4">
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <input type="radio" name="sort_direction_radio" value="asc" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span>A-Z</span>
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <input type="radio" name="sort_direction_radio" value="desc" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span>Z-A</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button onclick="applySort()"
+                                class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold text-sm hover:bg-indigo-700 transition">
+                            Terapkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="overflow-x-auto">
@@ -59,21 +100,31 @@
 </div>
 
 <script>
+    /* ================= GLOBAL ================= */
     const POLL_INTERVAL = 2000;
     let isLoading = false;
+    let sortColumn = 'name';
+    let sortDirection = 'asc';
 
+    const columnState = {
+        'name':         { label: 'Name' },
+        'type':         { label: 'Type' },
+        'mac-address':  { label: 'MAC Address' },
+        'rx-byte':      { label: 'Rx Bytes' },
+        'tx-byte':      { label: 'Tx Bytes' },
+    };
+
+    /* ================= UTILS ================= */
     function formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
-
+        if (!+bytes) return '0 Bytes';
         const k = 1024;
         const dm = decimals < 0 ? 0 : decimals;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
     }
 
+    /* ================= ROUTER & DATA ================= */
     function changeRouter() {
         fetchData();
     }
@@ -83,7 +134,7 @@
         isLoading = true;
 
         const routerId = document.getElementById('routerSelect').value;
-        const url = `/api/router-interfaces/${routerId}`;
+        const url = `/api/router-interfaces/${routerId}?sort_column=${sortColumn}&sort_direction=${sortDirection}`;
 
         fetch(url)
             .then(response => response.json())
@@ -91,7 +142,6 @@
                 const alertBox = document.getElementById('alertBox');
                 const dataContainer = document.getElementById('data');
 
-                // 1. Handle Error
                 if (data && data.error) {
                     const errorMessage = `Gagal terhubung ke router: ${data.error}`;
                     alertBox.classList.remove('hidden');
@@ -102,13 +152,11 @@
 
                 alertBox.classList.add('hidden');
 
-                // 2. Handle No Data
                 if (!data || data.length === 0) {
                     dataContainer.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-slate-500">Tidak ada interface pada router ini.</td></tr>`;
                     return;
                 }
 
-                // 3. Render Data
                 let html = '';
                 data.forEach(item => {
                     const isRunning = item.running === 'true';
@@ -152,7 +200,47 @@
             });
     }
 
+    /* ================= SORTING ================= */
+    function toggleSortDropdown() {
+        const dropdown = document.getElementById('sort-dropdown');
+        dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+            initializeSortDropdown();
+        }
+    }
+
+    function initializeSortDropdown() {
+        const select = document.getElementById('sort-column-select');
+        select.innerHTML = '';
+        for (const key in columnState) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = columnState[key].label;
+            if (key === sortColumn) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        }
+        document.querySelector(`input[name="sort_direction_radio"][value="${sortDirection}"]`).checked = true;
+    }
+
+    function applySort() {
+        sortColumn = document.getElementById('sort-column-select').value;
+        sortDirection = document.querySelector('input[name="sort_direction_radio"]:checked').value;
+        fetchData();
+        toggleSortDropdown();
+    }
+
+    window.addEventListener('click', function(e) {
+        const container = document.getElementById('sort-dropdown-container');
+        if (container && !container.contains(e.target)) {
+            document.getElementById('sort-dropdown').classList.add('hidden');
+        }
+    });
+
+    /* ================= INIT ================= */
     document.addEventListener('DOMContentLoaded', () => {
+        initializeSortDropdown();
         fetchData();
         setInterval(fetchData, POLL_INTERVAL);
     });

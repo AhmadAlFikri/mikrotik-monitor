@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SessionLogsExport;
 use App\Models\SessionLog;
 use App\Models\TrafficStat;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\SessionLogsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -88,29 +88,58 @@ class ReportController extends Controller
         }
 
         $data = $query->select(DB::raw($selectRaw))
-                      ->groupBy(DB::raw($groupBy))
-                      ->orderBy(DB::raw($orderBy))
-                      ->get();
+            ->groupBy(DB::raw($groupBy))
+            ->orderBy(DB::raw($orderBy))
+            ->get();
 
         return view('report.monthly', compact('data', 'users', 'selectedUser', 'filter'));
     }
 
-    public function sessionLogs()
+    public function sessionLogs(Request $request)
     {
-        $sessionLogs = SessionLog::orderBy('login_time', 'desc')->paginate(15);
-        return view('report.sessions', compact('sessionLogs'));
+        $query = SessionLog::query();
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('login_time', [$startDate, $endDate]);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'login_time');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $sessionLogs = $query->paginate(15);
+
+        return view('report.sessions', compact('sessionLogs', 'sortBy', 'sortOrder'));
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
-        return Excel::download(new SessionLogsExport, 'session-logs.xlsx');
+        return Excel::download(new SessionLogsExport($request), 'session-logs.xlsx');
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $sessionLogs = SessionLog::orderBy('login_time', 'desc')->get();
+        $query = SessionLog::query();
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('login_time', [$startDate, $endDate]);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'login_time');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $sessionLogs = $query->get();
         $pdf = Pdf::loadView('report.sessions_pdf', compact('sessionLogs'));
+
         return $pdf->download('session-logs.pdf');
     }
 }
-

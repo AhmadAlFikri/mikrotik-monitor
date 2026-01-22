@@ -8,11 +8,11 @@ class AdminOnly
 {
     public function handle($request, Closure $next)
     {
-        if (!session()->has('admin_login')) {
+        if (! session()->has('admin_login')) {
             return redirect('/login');
         }
 
-        if (!in_array(session('role'), ['admin','administrator'])) {
+        if (! in_array(session('role'), ['admin', 'administrator'])) {
             abort(403);
         }
 

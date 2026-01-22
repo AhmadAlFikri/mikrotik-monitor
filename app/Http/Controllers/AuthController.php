@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Admin;
 
 class AuthController extends Controller
 {
@@ -39,6 +39,7 @@ class AuthController extends Controller
     public function logout()
     {
         session()->forget(['admin_login', 'admin_id', 'role']);
+
         return redirect('/login');
     }
 }

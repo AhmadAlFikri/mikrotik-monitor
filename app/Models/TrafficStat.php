@@ -11,6 +11,6 @@ class TrafficStat extends Model
         'user',
         'rx_rate',
         'tx_rate',
-        'stat_date'
+        'stat_date',
     ];
 }

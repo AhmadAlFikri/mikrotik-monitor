@@ -10,6 +10,6 @@ class Router extends Model
         'name',
         'ip',
         'username',
-        'password'
+        'password',
     ];
 }

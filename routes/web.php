@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\RouterController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InterfaceController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RouterController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,9 +36,6 @@ Route::middleware('adminOnly')->group(function () {
 
     // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::get('/dashboard/bandwidth-report', [DashboardController::class, 'index']);
-    Route::get('/dashboard/bandwidth-report/internet', [DashboardController::class, 'index']);
-    Route::get('/dashboard/bandwidth-report/ethernet', [DashboardController::class, 'index']);
 
     // REALTIME API (AJAX / FETCH)
     Route::get('/api/router/{id}', [DashboardController::class, 'realtime']);
