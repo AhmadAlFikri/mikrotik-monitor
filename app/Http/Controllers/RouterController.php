@@ -8,6 +8,14 @@ use Illuminate\Support\Facades\Crypt;
 
 class RouterController extends Controller
 {
+    // TAMPILKAN DAFTAR ROUTER
+    public function index()
+    {
+        $routers = Router::all();
+
+        return view('router.index', compact('routers'));
+    }
+
     // TAMPILKAN FORM TAMBAH ROUTER
     public function add()
     {
@@ -34,5 +42,19 @@ class RouterController extends Controller
         ]);
 
         return redirect('/dashboard')->with('success', 'Router berhasil ditambahkan');
+    }
+
+    // HAPUS ROUTER
+    public function destroy($id)
+    {
+        $router = Router::find($id);
+
+        if ($router) {
+            $router->delete();
+
+            return redirect('/routers')->with('success', 'Router berhasil dihapus');
+        }
+
+        return redirect('/routers')->with('error', 'Router tidak ditemukan');
     }
 }

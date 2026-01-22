@@ -41,8 +41,10 @@ Route::middleware('adminOnly')->group(function () {
     Route::get('/api/router/{id}', [DashboardController::class, 'realtime']);
 
     // ROUTER MANAGEMENT
+    Route::get('/routers', [RouterController::class, 'index']);
     Route::get('/router/add', [RouterController::class, 'add']);
     Route::post('/router/store', [RouterController::class, 'store']);
+    Route::delete('/routers/{id}', [RouterController::class, 'destroy']);
 
     // REPORT
     Route::get('/report/monthly', [ReportController::class, 'monthly']);

@@ -90,12 +90,44 @@
                 </div>
             </div>
 
-            <x-nav-link href="/router/add" :active="request()->is('router*')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Tambah Router</span>
-            </x-nav-link>
+            <div x-data="{ open: {{ request()->is('router*') || request()->is('routers*') ? 'true' : 'false' }} }" class="relative">
+                <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg
+                               transition-colors duration-200 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                               {{ request()->is('router*') || request()->is('routers*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                    <div class="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.562a4.5 4.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.142 0M1.394 8.394a15 15 0 0121.213 0" />
+                        </svg>
+                        <span>Router</span>
+                    </div>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="mt-2 space-y-2 pl-6">
+                    <a href="/routers"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('routers*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h4a2 2 0 012 2v2m-6 0h6" />
+                        </svg>
+                        <span>Daftar Router</span>
+                    </a>
+                    <a href="/router/add"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200
+                              text-gray-500 hover:bg-indigo-100 hover:text-indigo-600
+                              {{ request()->is('router/add*') ? 'bg-indigo-600 text-white font-semibold shadow' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Tambah Router</span>
+                    </a>
+                </div>
+            </div>
 
             <div x-data="{ open: {{ request()->is('report*') ? 'true' : 'false' }} }" class="relative">
                 <button @click="open = !open"

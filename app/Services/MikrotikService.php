@@ -248,4 +248,32 @@ class MikrotikService
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
+    public static function getOverallTraffic(string $ip, ?string $user, ?string $pass, string $interface = 'ether1')
+    {
+        try {
+            $api = new Client([
+                'host' => $ip,
+                'user' => $user,
+                'pass' => $pass,
+                'timeout' => 5,
+            ]);
+
+            $trafficQuery = new Query('/interface/monitor-traffic');
+            $trafficQuery->equal('interface', $interface);
+            $trafficQuery->equal('once', 'true');
+            $traffic = $api->query($trafficQuery)->read();
+
+            if (empty($traffic)) {
+                return ['error' => "Interface {$interface} not found or no traffic data."];
+            }
+
+            return [
+                'rx_rate' => $traffic[0]['rx-bits-per-second'] ?? 0,
+                'tx_rate' => $traffic[0]['tx-bits-per-second'] ?? 0,
+            ];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
 }

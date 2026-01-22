@@ -2,8 +2,9 @@
 
 use App\Http\Middleware\AdministratorOnly;
 use App\Http\Middleware\AdminOnly;
-use Illuminate\Foundation\Application;
+use Illuminate\Console\Scheduling\Schedule;
 // IMPORT MIDDLEWARE KAMU
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -13,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('app:fetch-mikrotik-traffic')->everyMinute();
+    })
     // REGISTER MIDDLEWARE (PENGGANTI Kernel.php)
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
