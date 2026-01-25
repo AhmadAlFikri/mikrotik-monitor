@@ -33,13 +33,13 @@
         <form id="filterForm" action="" method="GET" class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-slate-200/60 p-1.5 rounded-full">
                 <input type="hidden" name="filter" id="filterInput" value="{{ $filter }}">
+                <button type="submit" name="filter" value="1H" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1H' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1H</button>
                 <button type="submit" name="filter" value="1D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1D</button>
                 <button type="submit" name="filter" value="5D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '5D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5D</button>
                 <button type="submit" name="filter" value="1M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1M</button>
                 <button type="submit" name="filter" value="3M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '3M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">3M</button>
                 <button type="submit" name="filter" value="6M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '6M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">6M</button>
                 <button type="submit" name="filter" value="1Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1Y</button>
-                <button type="submit" name="filter" value="5Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '5Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5Y</button>
                 <button type="submit" name="filter" value="All" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == 'All' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">All</button>
                 <select name="user" id="userSelect" class="px-6 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 bg-transparent text-slate-600 hover:text-indigo-600">
                     <option value="all" class="bg-white text-slate-600">All Users</option>
@@ -63,7 +63,7 @@
 
     let labels = {!! json_encode($data->pluck('label')) !!};
 
-    if (filter === '1D') {
+    if (filter === '1H' || filter === '1D') {
         labels = labels.map(label => {
             const date = new Date(label);
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -73,7 +73,7 @@
     const rxData = {!! json_encode($data->pluck('avg_rx')) !!};
     const txData = {!! json_encode($data->pluck('avg_tx')) !!};
 
-    const formatMbps = (bytes) => (bytes / 1024 / 1024).toFixed(2);
+    const formatMbps = (bytes) => (bytes * 8 / 1024 / 1024).toFixed(2);
 
     const ctx = document.getElementById('monthlyChart').getContext('2d');
 

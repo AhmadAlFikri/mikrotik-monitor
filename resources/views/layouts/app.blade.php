@@ -21,7 +21,7 @@
 
 <body class="antialiased bg-slate-50 text-slate-800">
 
-@includeIf('components.loading')
+
 
 <div x-data="{ sidebarOpen: false }" class="flex h-screen bg-white">
 
@@ -219,7 +219,7 @@
         </header>
 
         <!-- CONTENT -->
-        <main class="flex-1 overflow-y-auto bg-slate-100 opacity-0 transition-opacity duration-500 ease-in-out">
+        <main class="flex-1 overflow-y-auto bg-slate-100">
             <div class="container mx-auto px-6 py-8">
                 @yield('content')
             </div>
@@ -250,59 +250,7 @@
     </div>
 </div>
 
-<script>
-function openLogoutModal(){
-    document.getElementById('logoutModal').classList.remove('hidden');
-}
-function closeLogoutModal(){
-    document.getElementById('logoutModal').classList.add('hidden');
-}
 
-document.addEventListener("DOMContentLoaded", function() {
-    const mainContent = document.querySelector('main');
-    const loadingOverlay = document.getElementById('loading-overlay');
-
-    // Fade in content on initial load
-    if (mainContent) {
-        mainContent.classList.remove('opacity-0');
-    }
-    if (loadingOverlay) {
-        // Ensure loader is hidden on back/forward navigation
-        loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-    }
-
-    // Show loader and fade out content when navigating away
-    const links = document.querySelectorAll('a:not([target="_blank"])');
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Check if it's a normal navigation link
-            const href = link.getAttribute('href');
-            if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                if (mainContent) {
-                    mainContent.style.transition = 'opacity 0.3s ease-out';
-                    mainContent.classList.add('opacity-0');
-                }
-                if (loadingOverlay) {
-                    loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
-                }
-            }
-        });
-    });
-
-    // Handle back/forward cache
-    window.addEventListener('pageshow', function (event) {
-        if (event.persisted) {
-            if (mainContent) {
-                mainContent.style.transition = 'none'; // No transition on bfcache restore
-                mainContent.classList.remove('opacity-0');
-            }
-            if (loadingOverlay) {
-                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-            }
-        }
-    });
-});
-</script>
 
 </body>
 </html>

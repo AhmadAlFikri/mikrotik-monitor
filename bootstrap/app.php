@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('app:fetch-mikrotik-traffic')->everyMinute();
+        $schedule->command('app:fetch-user-traffic')->everyMinute();
     })
     // REGISTER MIDDLEWARE (PENGGANTI Kernel.php)
     ->withMiddleware(function (Middleware $middleware) {
