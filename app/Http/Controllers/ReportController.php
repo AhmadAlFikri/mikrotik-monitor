@@ -96,11 +96,14 @@ class ReportController extends Controller
         $query = SessionLog::query();
 
         // Filter by date range
-        if ($request->has('start_date') && $request->has('end_date')) {
+        if ($request->has('start_date') && $request->filled('start_date') && $request->has('end_date') && $request->filled('end_date')) {
             $startDate = Carbon::parse($request->start_date)->startOfDay();
             $endDate = Carbon::parse($request->end_date)->endOfDay();
             $query->whereBetween('login_time', [$startDate, $endDate]);
         }
+
+        // Get the total count after filtering
+        $totalLogs = $query->count();
 
         // Sorting
         $sortBy = $request->get('sort_by', 'login_time');
@@ -109,7 +112,7 @@ class ReportController extends Controller
 
         $sessionLogs = $query->paginate(15);
 
-        return view('report.sessions', compact('sessionLogs', 'sortBy', 'sortOrder'));
+        return view('report.sessions', compact('sessionLogs', 'sortBy', 'sortOrder', 'totalLogs'));
     }
 
     public function exportExcel(Request $request)

@@ -64,6 +64,13 @@
         </div>
     </form>
 
+    <!-- Total Logs -->
+    <div class="mb-4">
+        <p class="text-sm text-slate-600">
+            Total Logs: <span class="font-semibold">{{ $totalLogs }}</span>
+        </p>
+    </div>
+
     <!-- Session Log Table -->
     <div class="overflow-x-auto mt-6">
         <table class="min-w-full divide-y divide-slate-200">
