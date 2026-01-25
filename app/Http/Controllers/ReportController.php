@@ -82,13 +82,22 @@ class ReportController extends Controller
             $query->whereBetween('stat_timestamp', [$startDate, $endDate]);
         }
 
+        // Calculate totals before adding groupBy for the chart
+        $totalQuery = clone $query;
+        $totals = $totalQuery->select(DB::raw('SUM(rx_rate) as total_rx, SUM(tx_rate) as total_tx'))->first();
 
         $data = $query->select(DB::raw($selectRaw))
             ->groupBy(DB::raw($groupBy))
             ->orderBy(DB::raw($orderBy))
             ->get();
 
-        return view('report.monthly', compact('data', 'users', 'selectedUser', 'filter'));
+        // Assuming data is collected every minute (60 seconds)
+        $intervalInSeconds = 60;
+        $totalRxBytes = ($totals->total_rx ?? 0) * $intervalInSeconds;
+        $totalTxBytes = ($totals->total_tx ?? 0) * $intervalInSeconds;
+
+
+        return view('report.monthly', compact('data', 'users', 'selectedUser', 'filter', 'totalRxBytes', 'totalTxBytes'));
     }
 
     public function sessionLogs(Request $request)

@@ -21,6 +21,32 @@
         </div>
     </div>
 
+    <!-- Totals -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-slate-50 rounded-xl p-4">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-full">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path></svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-slate-500 text-sm font-medium">Total RX</h3>
+                    <p class="text-2xl font-bold text-slate-800">{{ formatBytes($totalRxBytes) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-4">
+            <div class="flex items-center">
+                <div class="p-3 bg-indigo-100 rounded-full">
+                    <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v14"></path></svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-slate-500 text-sm font-medium">Total TX</h3>
+                    <p class="text-2xl font-bold text-slate-800">{{ formatBytes($totalTxBytes) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart Card -->
     <div class="bg-slate-50/50 rounded-xl p-4 md:p-6">
         <div class="h-96">
@@ -41,23 +67,28 @@
                 <button type="submit" name="filter" value="6M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '6M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">6M</button>
                 <button type="submit" name="filter" value="1Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1Y</button>
                 <button type="submit" name="filter" value="All" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == 'All' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">All</button>
-                <select name="user" id="userSelect" class="px-6 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 bg-transparent text-slate-600 hover:text-indigo-600">
-                    <option value="all" class="bg-white text-slate-600">All Users</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user }}" {{ $selectedUser == $user ? 'selected' : '' }} class="bg-white text-slate-600">{{ $user }}</option>
-                    @endforeach
-                </select>
             </div>
         </form>
+    </div>
+
+    <!-- User List -->
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-slate-700 mb-3">Users</h2>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="?filter={{ $filter }}&user=all" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ !$selectedUser || $selectedUser == 'all' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-200/60 text-slate-600 hover:text-indigo-600' }}">
+                All Users
+            </a>
+            @foreach($users as $user)
+            <a href="?filter={{ $filter }}&user={{ $user }}" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $selectedUser == $user ? 'bg-indigo-600 text-white shadow' : 'bg-slate-200/60 text-slate-600 hover:text-indigo-600' }}">
+                {{ $user }}
+            </a>
+            @endforeach
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.getElementById('userSelect').addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter') || '1M';
 
