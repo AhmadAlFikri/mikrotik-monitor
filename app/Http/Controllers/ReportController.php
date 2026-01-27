@@ -16,88 +16,86 @@ class ReportController extends Controller
     public function monthly(Request $request)
     {
         $filter = $request->query('filter', '1M');
-        $selectedUser = $request->query('user');
+        $endDate = now();
+        $startDate = now(); // Placeholder, akan ditimpa
 
-        $users = TrafficStat::select('user')->distinct()->pluck('user');
+        // Atur query untuk tabel (umumnya per hari)
+        $tableSelectRaw = 'DATE_FORMAT(recorded_at, "%Y-%m-%d") as label, AVG(avg_rx_rate) as avg_rx, AVG(avg_tx_rate) as avg_tx';
+        $tableGroupBy = 'label';
 
-        $query = TrafficStat::query();
-        $selectRaw = '';
-        $groupBy = '';
-        $orderBy = '';
-
-        $endDate = Carbon::now();
-        $startDate = null;
-
-        if ($selectedUser && $selectedUser !== 'all') {
-            $query->where('user', $selectedUser);
-        }
+        // Atur query untuk grafik (bisa berbeda)
+        $chartSelectRaw = $tableSelectRaw;
+        $chartGroupBy = $tableGroupBy;
 
         switch ($filter) {
-            case '1H':
-                $startDate = $endDate->copy()->subHour();
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m-%d %H:%i") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
-                break;
             case '1D':
-                $startDate = $endDate->copy()->subDay();
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m-%d %H:00") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
+                $startDate = now()->startOfDay();
+                $endDate = now()->endOfDay();
+                $selectRaw = 'DATE_FORMAT(recorded_at, "%Y-%m-%d %H:00:00") as label, AVG(avg_rx_rate) as avg_rx, AVG(avg_tx_rate) as avg_tx';
+                $tableSelectRaw = $selectRaw;
+                $chartSelectRaw = $selectRaw;
+                $tableGroupBy = 'label';
+                $chartGroupBy = 'label';
                 break;
-            case '5D':
-                $startDate = $endDate->copy()->subDays(5);
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m-%d") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
+            case '1W':
+                $startDate = now()->startOfWeek();
+                $endDate = now()->endOfWeek();
+                // Tabel dan Grafik sama-sama per hari
                 break;
             case '1M':
             default:
-                $startDate = $endDate->copy()->subMonth();
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m-%d") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
+                $startDate = now()->startOfMonth();
+                $endDate = now()->endOfMonth();
+                // Tabel dan Grafik sama-sama per hari
                 break;
             case '3M':
-                $startDate = $endDate->copy()->subMonths(3);
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
-                break;
-            case '6M':
-                $startDate = $endDate->copy()->subMonths(6);
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y-%m") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
+                $startDate = now()->subMonths(2)->startOfMonth();
+                $endDate = now()->endOfMonth();
+                // Tabel per hari (menggunakan default), Grafik per minggu
+                $chartSelectRaw = 'DATE(recorded_at - INTERVAL (WEEKDAY(recorded_at)) DAY) as label, AVG(avg_rx_rate) as avg_rx, AVG(avg_tx_rate) as avg_tx';
+                $chartGroupBy = 'label';
                 break;
             case '1Y':
-                $startDate = $endDate->copy()->subYear();
-                $selectRaw = 'DATE_FORMAT(stat_timestamp, "%Y") as label, AVG(rx_rate) as avg_rx, AVG(tx_rate) as avg_tx';
-                $groupBy = 'label';
-                $orderBy = 'label';
+                $startDate = now()->startOfYear();
+                $endDate = now()->endOfYear();
+                // Tabel per hari, Grafik per bulan
+                $chartSelectRaw = 'DATE_FORMAT(recorded_at, "%Y-%m-01") as label, AVG(avg_rx_rate) as avg_rx, AVG(avg_tx_rate) as avg_tx';
+                $chartGroupBy = 'label';
                 break;
         }
 
-        if ($startDate) {
-            $query->whereBetween('stat_timestamp', [$startDate, $endDate]);
+        // --- Query Dasar ---
+        $baseQuery = \App\Models\HourlyTrafficSummary::query()->whereBetween('recorded_at', [$startDate, $endDate]);
+        $selectedUser = $request->query('user');
+        if ($selectedUser && $selectedUser !== 'all') {
+            $baseQuery->where('user_name', $selectedUser);
         }
 
-        // Calculate totals before adding groupBy for the chart
-        $totalQuery = clone $query;
-        $totals = $totalQuery->select(DB::raw('SUM(rx_rate) as total_rx, SUM(tx_rate) as total_tx'))->first();
+        // --- Ambil Data untuk Tabel ---
+        $tableQuery = clone $baseQuery;
+        $tableData = $tableQuery->select(DB::raw($tableSelectRaw))->groupBy(DB::raw($tableGroupBy))->orderBy('label', 'asc')->get();
 
-        $data = $query->select(DB::raw($selectRaw))
-            ->groupBy(DB::raw($groupBy))
-            ->orderBy(DB::raw($orderBy))
-            ->get();
+        // --- Ambil Data untuk Grafik ---
+        $chartQuery = clone $baseQuery;
+        $chartData = $chartQuery->select(DB::raw($chartSelectRaw))->groupBy(DB::raw($chartGroupBy))->orderBy('label', 'asc')->get();
 
-        // Assuming data is collected every minute (60 seconds)
-        $intervalInSeconds = 60;
-        $totalRxBytes = ($totals->total_rx ?? 0) * $intervalInSeconds;
-        $totalTxBytes = ($totals->total_tx ?? 0) * $intervalInSeconds;
+        // --- Perhitungan Total (berdasarkan query dasar) ---
+        $totalQuery = clone $baseQuery;
+        $sumOfAverages = $totalQuery->select(DB::raw('SUM(avg_rx_rate) as total_avg_rx_rate, SUM(avg_tx_rate) as total_avg_tx_rate'))->first();
+        $totalRxBytes = (($sumOfAverages->total_avg_rx_rate ?? 0) / 8) * 3600;
+        $totalTxBytes = (($sumOfAverages->total_avg_tx_rate ?? 0) / 8) * 3600;
 
+        $users = \App\Models\HourlyTrafficSummary::select('user_name')->distinct()->pluck('user_name');
 
-        return view('report.monthly', compact('data', 'users', 'selectedUser', 'filter', 'totalRxBytes', 'totalTxBytes'));
+        return view('report.monthly', [
+            'tableData' => $tableData,
+            'chartData' => $chartData,
+            'users' => $users,
+            'selectedUser' => $selectedUser,
+            'filter' => $filter,
+            'totalRxBytes' => $totalRxBytes,
+            'totalTxBytes' => $totalTxBytes,
+        ]);
     }
 
     public function sessionLogs(Request $request)

@@ -54,19 +54,62 @@
         </div>
     </div>
 
+    <!-- Data Table -->
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Ringkasan Data Harian</h2>
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Tanggal
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Rata-rata RX
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Rata-rata TX
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                    @forelse ($tableData as $item)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                                {{ \Carbon\Carbon::parse($item->label)->translatedFormat('d F Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                {{ number_format($item->avg_rx / 1000000, 2) }} Mbps
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                {{ number_format($item->avg_tx / 1000000, 2) }} Mbps
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-500">
+                                Tidak ada data ringkasan untuk ditampilkan pada rentang waktu ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Filters -->
     <div class="mt-6 flex justify-center">
         <form id="filterForm" action="" method="GET" class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-slate-200/60 p-1.5 rounded-full">
-                <input type="hidden" name="filter" id="filterInput" value="{{ $filter }}">
-                <button type="submit" name="filter" value="1H" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1H' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1H</button>
+                {{-- Simpan filter user saat mengganti rentang waktu --}}
+                @if (request('user'))
+                    <input type="hidden" name="user" value="{{ request('user') }}">
+                @endif
                 <button type="submit" name="filter" value="1D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1D</button>
-                <button type="submit" name="filter" value="5D" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '5D' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">5D</button>
+                <button type="submit" name="filter" value="1W" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1W' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1W</button>
                 <button type="submit" name="filter" value="1M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1M</button>
                 <button type="submit" name="filter" value="3M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '3M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">3M</button>
-                <button type="submit" name="filter" value="6M" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '6M' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">6M</button>
                 <button type="submit" name="filter" value="1Y" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == '1Y' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">1Y</button>
-                <button type="submit" name="filter" value="All" class="px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 {{ $filter == 'All' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-indigo-600' }}">All</button>
             </div>
         </form>
     </div>
@@ -89,22 +132,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const filter = urlParams.get('filter') || '1M';
+    const filter = @json($filter);
+    let labels = @json($chartData->pluck('label'));
+    const rxData = @json($chartData->pluck('avg_rx'));
+    const txData = @json($chartData->pluck('avg_tx'));
 
-    let labels = {!! json_encode($data->pluck('label')) !!};
-
-    if (filter === '1H' || filter === '1D') {
-        labels = labels.map(label => {
-            const date = new Date(label);
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-        });
+    // Format label berdasarkan filter agar mudah dibaca di grafik
+    if (filter === '1D') {
+        labels = labels.map(label => new Date(label).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }));
+    } else if (filter === '3M') {
+        labels = labels.map(label => 'Minggu ' + new Date(label).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }));
+    } else if (filter === '1Y') {
+        labels = labels.map(label => new Date(label).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }));
     }
 
-    const rxData = {!! json_encode($data->pluck('avg_rx')) !!};
-    const txData = {!! json_encode($data->pluck('avg_tx')) !!};
-
-    const formatMbps = (bytes) => (bytes * 8 / 1024 / 1024).toFixed(2);
+    const formatMbps = (bits) => (bits / 1000 / 1000).toFixed(2);
 
     const ctx = document.getElementById('monthlyChart').getContext('2d');
 
